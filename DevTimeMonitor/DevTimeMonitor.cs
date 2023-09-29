@@ -32,7 +32,6 @@ namespace DevTimeMonitor
         private static readonly string outputTitle = "DevTimeMonitor";
         private static IVsOutputWindow outputWindow;
         private static TextEditorEvents textEditorEvents;
-        private static string previousKeyPressed = "";
         private static string user = "";
         private DevTimeMonitor(AsyncPackage package)
         {
@@ -160,7 +159,7 @@ namespace DevTimeMonitor
                     Document document = window.Document;
                     if (!document.ReadOnly)
                     {
-                        if(textEditorEvents == null)
+                        if (textEditorEvents == null)
                         {
                             textEditorEvents = ((Events2)window.DTE.Events).TextEditorEvents;
                             textEditorEvents.LineChanged += OnLineChanged;
@@ -243,12 +242,9 @@ namespace DevTimeMonitor
                         if (fileContent != null)
                         {
                             int characters = fileContent.Length;
-                            if (tracker.TotalCharacters != characters || tracker.NewKeysPressed != 0)
+                            if (tracker.NewKeysPressed != 0)
                             {
                                 DateTime currentTime = DateTime.Now;
-
-                                tracker.TotalCharacters = characters;
-                                tracker.NewCharacters = tracker.TotalCharacters - tracker.PreviousCharacters;
                                 tracker.ClosingTime = currentTime;
 
                                 if (dataManager.Search(tracker.ProjectName, tracker.FileName) != null)
@@ -287,14 +283,22 @@ namespace DevTimeMonitor
                     if (tracker != null)
                     {
                         string modifiedText = startPoint.CreateEditPoint().GetText(endPoint);
-                        if (modifiedText.Length == 1 && ContainsAlphanumericCharacter(modifiedText))
+                        modifiedText = modifiedText.Trim();
+                        if ((modifiedText.Length == 1 || modifiedText == "\r\n" || modifiedText == "\r" || modifiedText == "\n") && IsAValidCharacter(modifiedText))
                         {
-                            previousKeyPressed = modifiedText;
                             tracker.NewKeysPressed++;
                             tracker.TotalKeysPressed++;
 
+                            tracker.TotalCharacters++;
+                            tracker.NewCharacters++;
+
                             outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
                             customPane.OutputStringThreadSafe($"\nCharacter entered by the user in {tracker.FileName}");
+                        }
+                        else
+                        {
+                            tracker.TotalCharacters += modifiedText.Length;
+                            tracker.NewCharacters += modifiedText.Length;
                         }
                     }
                 }
@@ -305,9 +309,10 @@ namespace DevTimeMonitor
                 customPane.OutputStringThreadSafe($"\nAn error has ocurred: {ex.Message}");
             }
         }
-        private static bool ContainsAlphanumericCharacter(string text)
+        private static bool IsAValidCharacter(string text)
         {
-            return !string.IsNullOrEmpty(text) && text.Any(char.IsLetterOrDigit);
+            string characters = "!\"#$%&/()=?¡'¿+*{}[]-_:.;,<> ";
+            return characters.Contains(text) || text.Any(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) || char.IsControl(c) || char.IsSymbol(c));
         }
         #endregion
 
@@ -315,49 +320,28 @@ namespace DevTimeMonitor
         private static void ShowStatistics(object sender, EventArgs e)
         {
             List<Tracker> data = dataManager.ReadAll();
-            if (data.Count > 0)
-            {
-                int totalFiles = data.Count;
-                int totalCharacters = 0;
-                int totalCharactersByUser = 0;
-                int totalCharactersByAI = 0;
+            int totalFiles = data.Count;
+            int totalCharacters = 0;
+            int totalCharactersByUser = 0;
+            int totalCharactersByAI = 0;
 
-                foreach (Tracker tracker in data)
-                {
-                    totalCharacters += tracker.TotalCharacters;
-                    totalCharactersByUser += tracker.TotalKeysPressed;
-                }
-
-                totalCharactersByAI += totalCharacters - totalCharactersByUser;
-
-                double totalCharactersByUserPercent = (double)totalCharactersByUser / totalCharacters;
-                double totalCharactersByAIPercent = (double)totalCharactersByAI / totalCharacters;
-
-                Report report = new Report(user, totalFiles, totalCharacters, totalCharactersByUser, totalCharactersByAI, totalCharactersByUserPercent, totalCharactersByAIPercent);
-                report.Show();
+            for(int i = 0; i < data.Count; i++) {
+                totalCharacters += data[i].TotalCharacters;
+                totalCharactersByUser += data[i].TotalKeysPressed;
             }
-            else
-            {
-                string message = "Data not found.";
 
-                ThreadHelper.ThrowIfNotOnUIThread();
-                IVsUIShell uiShell = Instance.package.GetService<SVsUIShell, IVsUIShell>();
-                Guid clsid = Guid.Empty;
-                uiShell.ShowMessageBox(
-                    0,
-                    ref clsid,
-                    $"DevTimeMonitor\n------------------------------------------------------------------\nDate: {DateTime.Now:dd-MM-yyyy hh:mm:ss}\nEnviroment: {user}\n------------------------------------------------------------------",
-                    string.Format(CultureInfo.CurrentCulture,
-                    message,
-                    Instance.package.ToString()),
-                    string.Empty,
-                    0,
-                    OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST,
-                    OLEMSGICON.OLEMSGICON_INFO,
-                    0,
-                    out int result);
+            totalCharactersByAI += totalCharacters - totalCharactersByUser;
+
+            double totalCharactersByUserPercent = 0.0;
+            double totalCharactersByAIPercent = 0.0;
+            if (totalCharacters > 0)
+            {
+                totalCharactersByUserPercent = (double)totalCharactersByUser / totalCharacters;
+                totalCharactersByAIPercent = (double)totalCharactersByAI / totalCharacters;
             }
+
+            Report report = new Report(user, totalFiles, totalCharacters, totalCharactersByUser, totalCharactersByAI, totalCharactersByUserPercent, totalCharactersByAIPercent);
+            report.Show();
         }
         #endregion
     }
