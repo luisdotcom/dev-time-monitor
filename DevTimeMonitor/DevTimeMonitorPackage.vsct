@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+	<Extern href="stdidcmd.h" />
+	<Extern href="vsshlids.h" />
+	<Commands package="guidDevTimeMonitorPackage">
+		<Menus>
+			<Menu guid="guidDevTimeMonitorPackageCmdSet" id="SubMenu" priority="0x0100" type="Menu">
+				<Parent guid="guidDevTimeMonitorPackageCmdSet" id="MyMenuGroup" />
+				<Strings>
+					<ButtonText>DevTimeMonitor</ButtonText>
+				</Strings>
+			</Menu>
+		</Menus>
+
+		<Groups>
+			<Group guid="guidDevTimeMonitorPackageCmdSet" id="MyMenuGroup" priority="0x0600">
+				<Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
+			</Group>
+			<Group guid="guidDevTimeMonitorPackageCmdSet" id="SubMenuGroup" priority="0x0000">
+				<Parent guid="guidDevTimeMonitorPackageCmdSet" id="SubMenu" />
+			</Group>
+		</Groups>
+
+		<Buttons>
+			<Button guid="guidDevTimeMonitorPackageCmdSet" id="cmdidDevTimeMonitor" priority="0x0000" type="Button">
+				<Parent guid="guidDevTimeMonitorPackageCmdSet" id="SubMenuGroup" />
+				<Icon guid="startImage" id="start" />
+				<Strings>
+					<ButtonText>Start</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidDevTimeMonitorPackageCmdSet" id="cmdidStopDevTimeMonitor" priority="0x0100" type="Button">
+				<Parent guid="guidDevTimeMonitorPackageCmdSet" id="SubMenuGroup" />
+				<Icon guid="stopImage" id="stop" />
+				<Strings>
+					<ButtonText>Stop</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidDevTimeMonitorPackageCmdSet" id="cmdidGenerateReport" priority="0x0200" type="Button">
+				<Parent guid="guidDevTimeMonitorPackageCmdSet" id="SubMenuGroup" />
+				<Icon guid="reportImage" id="report" />
+				<Strings>
+					<ButtonText>Show statistics</ButtonText>
+				</Strings>
+			</Button>
+		</Buttons>
+
+		<Bitmaps>
+			<Bitmap guid="startImage" href="Resources\start.png" usedList="start" />
+			<Bitmap guid="stopImage" href="Resources\stop.png" usedList="stop" />
+			<Bitmap guid="reportImage" href="Resources\report.png" usedList="report" />
+			<Bitmap guid="settingImage" href="Resources\setting.png" usedList="setting" />
+		</Bitmaps>
+	</Commands>
+
+	<Symbols>
+		<GuidSymbol name="guidDevTimeMonitorPackage" value="{71ce9d33-78f7-4374-a75b-abdaf8bf30cc}" />
+
+		<GuidSymbol name="guidDevTimeMonitorPackageCmdSet" value="{009c50db-7ae1-4460-acd1-da1112d471b0}">
+			<IDSymbol name="MyMenuGroup" value="0x1020" />
+			<IDSymbol name="CommandId" value="0x0100" />
+			<IDSymbol name="cmdidDevTimeMonitor" value="4129" />
+			<IDSymbol name="cmdidStopDevTimeMonitor" value="4130" />
+			<IDSymbol name="SubMenu" value="0x1100" />
+			<IDSymbol name="SubMenuGroup" value="0x1150" />
+			<IDSymbol name="cmdidGenerateReport" value="4433" />
+		</GuidSymbol>
+
+		<GuidSymbol name="startImage" value="{297ae207-783f-4f46-8e79-f8d74fed41f1}">
+			<IDSymbol name="start" value="1" />
+		</GuidSymbol>
+		<GuidSymbol name="stopImage" value="{297ae207-783f-4f46-8e79-f8d74fed41f2}">
+			<IDSymbol name="stop" value="1" />
+		</GuidSymbol>
+		<GuidSymbol name="reportImage" value="{297ae207-783f-4f46-8e79-f8d74fed41f3}">
+			<IDSymbol name="report" value="1" />
+		</GuidSymbol>
+		<GuidSymbol name="settingImage" value="{297ae207-783f-4f46-8e79-f8d74fed41f4}">
+			<IDSymbol name="setting" value="1" />
+		</GuidSymbol>
+	</Symbols>
+</CommandTable>
