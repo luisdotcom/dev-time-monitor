@@ -1,15 +1,17 @@
-﻿using DevTimeMonitor.Data;
+﻿using DevTimeMonitor.DTOs;
 using DevTimeMonitor.Entities;
 using DevTimeMonitor.Views;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Threading;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Composition;
-using System.Globalization;
+using System.Data.Entity;
+using System.Data.Entity.Migrations;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -20,120 +22,239 @@ namespace DevTimeMonitor
     [Export]
     internal sealed class DevTimeMonitor
     {
-        public const int CommandId = 4129;
-        public const int cmdidStopDevTimeMonitor = 4130;
-        public const int GenerateReportCommandId = 4433;
+        public const int StartDevTimeMonitor = 4129;
+        public const int StopDevTimeMonitor = 4130;
+        public const int GenerateReport = 4131;
+        public const int Settings = 4132;
 
         public static readonly Guid CommandSet = new Guid("009c50db-7ae1-4460-acd1-da1112d471b0");
         private readonly AsyncPackage package;
-        private static DataManager dataManager;
-        private List<Tracker> trackers;
         private static Guid outputGuid = new Guid("009c50db-7ae1-4460-acd1-da1112d471b1");
         private static readonly string outputTitle = "DevTimeMonitor";
         private static IVsOutputWindow outputWindow;
         private static TextEditorEvents textEditorEvents;
-        private static string user = "";
+
+        private List<TbTracker> trackers;
+        private static readonly SettingsHelper settingsHelper = new SettingsHelper();
+        private static TbUser user;
+        private static bool configured = false;
         private DevTimeMonitor(AsyncPackage package)
         {
             this.package = package ?? throw new ArgumentNullException(nameof(package));
-            dataManager = new DataManager();
         }
-
         public static DevTimeMonitor Instance { get; private set; }
         public static async Task InitializeAsync(AsyncPackage package)
         {
             Instance = new DevTimeMonitor(package);
-            user = Environment.UserName;
+
             if (await package.GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
             {
-                CommandID trackFilesCommandID = new CommandID(CommandSet, CommandId);
+                CommandID trackFilesCommandID = new CommandID(CommandSet, StartDevTimeMonitor);
                 MenuCommand trackFilesSubItem = new MenuCommand(new EventHandler(TrackFiles), trackFilesCommandID);
                 commandService.AddCommand(trackFilesSubItem);
 
-                CommandID stopTrackFilesCommandID = new CommandID(CommandSet, cmdidStopDevTimeMonitor);
+                CommandID stopTrackFilesCommandID = new CommandID(CommandSet, StopDevTimeMonitor);
                 MenuCommand stopTrackFilesSubItem = new MenuCommand(new EventHandler(StopTrackingFiles), stopTrackFilesCommandID);
                 commandService.AddCommand(stopTrackFilesSubItem);
 
-                CommandID generateReportSubCommandID = new CommandID(CommandSet, GenerateReportCommandId);
-                MenuCommand generateReportSubItem = new MenuCommand(new EventHandler(ShowStatistics), generateReportSubCommandID);
+                CommandID generateReportCommandID = new CommandID(CommandSet, GenerateReport);
+                MenuCommand generateReportSubItem = new MenuCommand(new EventHandler(ShowStatistics), generateReportCommandID);
                 commandService.AddCommand(generateReportSubItem);
-            }
-        }
 
-        #region TRACKER
-        private static async void TrackFiles(object sender, EventArgs e)
-        {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(Instance.package.DisposalToken);
+                CommandID openSettingsSubCommandID = new CommandID(CommandSet, Settings);
+                MenuCommand settingsSubItem = new MenuCommand(new EventHandler(OpenSettings), openSettingsSubCommandID);
+                commandService.AddCommand(settingsSubItem);
 
-            outputWindow = (IVsOutputWindow)Package.GetGlobalService(typeof(SVsOutputWindow));
-            outputWindow.CreatePane(ref outputGuid, outputTitle, 1, 1);
-
-            if (await Instance.package.GetServiceAsync(typeof(DTE)) is DTE2 dte)
-            {
-                foreach (Window window in dte.Windows)
+                SettingsDTO settings = settingsHelper.ReadSettings();
+                if (!settings.Configured)
                 {
-                    if (window.Kind == "Document")
+                    var trackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, StartDevTimeMonitor));
+                    if (trackFilesCommand != null)
                     {
-                        Instance.OnWindowCreated(window);
+                        trackFilesCommand.Enabled = false;
                     }
-                }
 
-                dte.Events.WindowEvents.WindowCreated += Instance.OnWindowCreated;
-                dte.Events.WindowEvents.WindowClosing += Instance.OnWindowClosing;
-            }
+                    var stopTrackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, StopDevTimeMonitor));
+                    if (stopTrackFilesCommand != null)
+                    {
+                        stopTrackFilesCommand.Enabled = false;
+                    }
 
-            outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
-            customPane.Activate();
-            customPane.OutputStringThreadSafe("DevTimeMonitor Initialized");
-            Instance.trackers = dataManager.ReadAll();
-            customPane.OutputStringThreadSafe($"\nCurrent states saved: {Instance.trackers.Count}");
+                    var generateReportCommand = commandService.FindCommand(new CommandID(CommandSet, GenerateReport));
+                    if (generateReportCommand != null)
+                    {
+                        generateReportCommand.Enabled = false;
+                    }
 
-            if (await Instance.package.GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
-            {
-                var trackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, CommandId));
-                if (trackFilesCommand != null)
-                {
-                    trackFilesCommand.Enabled = false;
-                }
-
-                var stopTrackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, cmdidStopDevTimeMonitor));
-                if (stopTrackFilesCommand != null)
-                {
-                    stopTrackFilesCommand.Enabled = true;
+                    OpenSettings(null, null);
                 }
             }
+
+            ValidateConfiguration(package);
         }
-        private static async void StopTrackingFiles(object sender, EventArgs e)
+        private static async void ValidateConfiguration(AsyncPackage package)
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(Instance.package.DisposalToken);
-
-            if (textEditorEvents != null)
+            SettingsDTO settings;
+            do
             {
-                textEditorEvents.LineChanged -= OnLineChanged;
-                textEditorEvents = null;
-            }
+                settings = settingsHelper.ReadSettings();
+                await Task.Delay(3000);
+            } while (!settings.Configured);
 
-            if (await Instance.package.GetServiceAsync(typeof(DTE)) is DTE2 dte)
+            if (await package.GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
             {
-                dte.Events.WindowEvents.WindowCreated -= Instance.OnWindowCreated;
-                dte.Events.WindowEvents.WindowClosing -= Instance.OnWindowClosing;
-            }
-
-            outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
-            customPane.OutputStringThreadSafe("\nDevTimeMonitor Finalized");
-
-            if (await Instance.package.GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
-            {
-                var trackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, CommandId));
+                var trackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, StartDevTimeMonitor));
                 if (trackFilesCommand != null)
                 {
                     trackFilesCommand.Enabled = true;
                 }
 
-                var stopTrackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, cmdidStopDevTimeMonitor));
+                var stopTrackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, StopDevTimeMonitor));
                 if (stopTrackFilesCommand != null)
                 {
                     stopTrackFilesCommand.Enabled = false;
+                }
+
+                var generateReportCommand = commandService.FindCommand(new CommandID(CommandSet, GenerateReport));
+                if (generateReportCommand != null)
+                {
+                    generateReportCommand.Enabled = true;
+                }
+            }
+            using (var context = new ApplicationDBContext())
+            {
+                user = context.Users.Where(u => u.UserName == settings.User).FirstOrDefault();
+            }
+            configured = true;
+        }
+
+        #region TRACKER
+        private static async void TrackFiles(object sender, EventArgs e)
+        {
+            if (configured)
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(Instance.package.DisposalToken);
+
+                outputWindow = (IVsOutputWindow)Package.GetGlobalService(typeof(SVsOutputWindow));
+                outputWindow.CreatePane(ref outputGuid, outputTitle, 1, 1);
+
+                if (await Instance.package.GetServiceAsync(typeof(DTE)) is DTE2 dte)
+                {
+                    foreach (Window window in dte.Windows)
+                    {
+                        if (window.Kind == "Document")
+                        {
+                            Instance.OnWindowCreated(window);
+                        }
+                    }
+
+                    dte.Events.WindowEvents.WindowCreated += Instance.OnWindowCreated;
+                    dte.Events.WindowEvents.WindowClosing += Instance.OnWindowClosing;
+                }
+
+                outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
+                customPane.Activate();
+                customPane.OutputStringThreadSafe("DevTimeMonitor Initialized");
+
+                using (var context = new ApplicationDBContext())
+                {
+                    Instance.trackers = context.Trackers.ToList();
+                    TbDailyLog dailyLog = context.DailyLogs.Where(d => d.UserId == user.Id).FirstOrDefault() ?? new TbDailyLog()
+                    {
+                        UserId = user.Id
+                    };
+
+                    DayOfWeek day = DateTime.Now.DayOfWeek;
+                    switch (day)
+                    {
+                        case DayOfWeek.Monday:
+                            dailyLog.Monday = true;
+
+                            dailyLog.Tuesday = false;
+                            dailyLog.Wednesday = false;
+                            dailyLog.Thursday = false;
+                            dailyLog.Friday = false;    
+                            break;
+                        case DayOfWeek.Tuesday:
+                            dailyLog.Tuesday = true;
+
+                            dailyLog.Wednesday = false;
+                            dailyLog.Thursday = false;
+                            dailyLog.Friday = false;
+                            break;
+                        case DayOfWeek.Wednesday:
+                            dailyLog.Wednesday = true;
+
+                            dailyLog.Thursday = false;
+                            dailyLog.Friday = false;
+                            break;
+                        case DayOfWeek.Thursday:
+                            dailyLog.Thursday = true;
+                            dailyLog.Friday = false;
+                            break;
+                        case DayOfWeek.Friday:
+                            dailyLog.Friday = true;
+                            break;
+                        default:
+                            break;
+                    }
+
+                    context.DailyLogs.AddOrUpdate(dailyLog);
+                    context.SaveChanges();
+                }
+
+                customPane.OutputStringThreadSafe($"\nCurrent states saved: {Instance.trackers.Count}");
+
+                if (await Instance.package.GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
+                {
+                    var trackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, StartDevTimeMonitor));
+                    if (trackFilesCommand != null)
+                    {
+                        trackFilesCommand.Enabled = false;
+                    }
+
+                    var stopTrackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, StopDevTimeMonitor));
+                    if (stopTrackFilesCommand != null)
+                    {
+                        stopTrackFilesCommand.Enabled = true;
+                    }
+                }
+            }
+        }
+        private static async void StopTrackingFiles(object sender, EventArgs e)
+        {
+            if (configured)
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(Instance.package.DisposalToken);
+
+                if (textEditorEvents != null)
+                {
+                    textEditorEvents.LineChanged -= OnLineChanged;
+                    textEditorEvents = null;
+                }
+
+                if (await Instance.package.GetServiceAsync(typeof(DTE)) is DTE2 dte)
+                {
+                    dte.Events.WindowEvents.WindowCreated -= Instance.OnWindowCreated;
+                    dte.Events.WindowEvents.WindowClosing -= Instance.OnWindowClosing;
+                }
+
+                outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
+                customPane.OutputStringThreadSafe("\nDevTimeMonitor Finalized");
+
+                if (await Instance.package.GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
+                {
+                    var trackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, StartDevTimeMonitor));
+                    if (trackFilesCommand != null)
+                    {
+                        trackFilesCommand.Enabled = true;
+                    }
+
+                    var stopTrackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, StopDevTimeMonitor));
+                    if (stopTrackFilesCommand != null)
+                    {
+                        stopTrackFilesCommand.Enabled = false;
+                    }
                 }
             }
         }
@@ -150,163 +271,159 @@ namespace DevTimeMonitor
         }
         private async void OnWindowCreated(Window window)
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-            try
+            if (configured)
             {
-                if (window.Kind == "Document")
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                try
                 {
-                    Document document = window.Document;
-                    if (!document.ReadOnly)
+                    if (window.Kind == "Document")
                     {
-                        if (textEditorEvents == null)
+                        Document document = window.Document;
+                        if (!document.ReadOnly)
                         {
-                            textEditorEvents = ((Events2)window.DTE.Events).TextEditorEvents;
-                            textEditorEvents.LineChanged += OnLineChanged;
-                        }
-                        string filePath = document.FullName;
-                        string projectName = window.Project.Name;
-                        string fileName = filePath.Split('\\').Last();
-                        string fileContent = await ReadFileContentAsync(filePath);
-
-                        if (fileContent != null)
-                        {
-                            outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
-                            customPane.OutputStringThreadSafe($"\nFile: {fileName} opened.");
-
-                            int characters = fileContent.Length;
-                            DateTime currentTime = DateTime.Now;
-
-                            Tracker tracker = dataManager.Search(projectName, fileName) ?? new Tracker()
+                            if (textEditorEvents == null)
                             {
-                                Id = Instance.trackers.Count,
-                                Path = filePath,
-                                ProjectName = projectName,
-                                FileName = fileName,
-                                PreviousCharacters = characters,
-                                StartTime = currentTime
-                            };
-
-                            tracker.PreviousCharacters = characters;
-                            tracker.StartTime = currentTime;
-                            tracker.ClosingTime = currentTime;
-                            tracker.NewCharacters = 0;
-                            tracker.NewKeysPressed = 0;
-
-                            if (Instance.trackers.Find(t => t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName) == null)
-                            {
-                                Instance.trackers.Add(tracker);
-                                dataManager.Insert(tracker);
+                                textEditorEvents = ((Events2)window.DTE.Events).TextEditorEvents;
+                                textEditorEvents.LineChanged += OnLineChanged;
                             }
-                            else
+                            string filePath = document.FullName;
+                            string projectName = window.Project.Name;
+                            string fileName = filePath.Split('\\').Last();
+                            string fileContent = await ReadFileContentAsync(filePath);
+
+                            if (fileContent != null)
                             {
-                                trackers.Remove(trackers.Find(t => t.Id == tracker.Id));
+                                outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
+                                customPane.OutputStringThreadSafe($"\nFile: {fileName} opened.");
 
-                                tracker.NewCharacters = 0;
-                                tracker.NewKeysPressed = 0;
+                                DateTime currentTime = DateTime.Now;
+                                using (var context = new ApplicationDBContext())
+                                {
+                                    TbTracker tracker = context.Trackers.Where(t => t.ProjectName == projectName && t.FileName == fileName).FirstOrDefault() ?? new TbTracker()
+                                    {
+                                        Id = Instance.trackers.Count,
+                                        Path = filePath,
+                                        ProjectName = projectName,
+                                        FileName = fileName,
+                                        CharactersTracked = 0,
+                                        KeysPressed = 0,
+                                        UserId = user.Id
+                                    };
 
-                                trackers.Add(tracker);
-
-                                dataManager.Update(tracker);
+                                    if (Instance.trackers.Find(t => t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName) == null)
+                                    {
+                                        Instance.trackers.Add(tracker);
+                                        context.Trackers.Add(tracker);
+                                    }
+                                    else
+                                    {
+                                        trackers.Remove(trackers.Find(t => t.Id == tracker.Id));
+                                        trackers.Add(tracker);
+                                    }
+                                    await context.SaveChangesAsync();
+                                    customPane.OutputStringThreadSafe($"\nTracking File: {fileName}.");
+                                }
                             }
-
-                            customPane.OutputStringThreadSafe($"\nTracking File: {fileName}.");
                         }
                     }
                 }
+                catch (IOException ex)
+                {
+                    outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
+                    customPane.OutputStringThreadSafe($"\nAn error has occurred: {ex.Message}");
+                }
             }
-            catch (IOException ex)
-            {
-                outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
-                customPane.OutputStringThreadSafe($"\nAn error has occurred: {ex.Message}");
-            }
-
         }
         private async void OnWindowClosing(Window window)
         {
-            try
+            if (configured)
             {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                if (window.Kind == "Document")
+                try
                 {
-                    Tracker tracker = Instance.trackers.Find(t =>
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    if (window.Kind == "Document")
                     {
-                        ThreadHelper.ThrowIfNotOnUIThread();
-                        return t.FileName == window.Caption;
-                    });
-                    if (tracker != null)
-                    {
-                        string filePath = tracker.Path;
-                        string fileContent = await ReadFileContentAsync(filePath);
-
-                        if (fileContent != null)
+                        TbTracker tracker = Instance.trackers.Find(t =>
                         {
-                            int characters = fileContent.Length;
-                            if (tracker.NewKeysPressed != 0)
-                            {
-                                DateTime currentTime = DateTime.Now;
-                                tracker.ClosingTime = currentTime;
+                            ThreadHelper.ThrowIfNotOnUIThread();
+                            return t.FileName == window.Caption;
+                        });
+                        if (tracker != null)
+                        {
+                            string filePath = tracker.Path;
+                            string fileContent = await ReadFileContentAsync(filePath);
 
-                                if (dataManager.Search(tracker.ProjectName, tracker.FileName) != null)
+                            if (fileContent != null)
+                            {
+                                int characters = fileContent.Length;
+                                DateTime currentTime = DateTime.Now;
+
+                                using (var context = new ApplicationDBContext())
                                 {
-                                    dataManager.Update(tracker);
+                                    if (context.Trackers.Where(t => t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName).Any())
+                                    {
+                                        context.Entry(tracker).State = EntityState.Modified;
+                                    }
+                                    else
+                                    {
+                                        context.Trackers.Add(tracker);
+                                    }
+
+                                    context.SaveChanges();
                                 }
-                                else
-                                {
-                                    dataManager.Insert(tracker);
-                                }
+
+                                outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
+                                customPane.OutputStringThreadSafe($"\nFile: {tracker.FileName} closed.");
                             }
-                            outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
-                            customPane.OutputStringThreadSafe($"\nFile: {tracker.FileName} closed.");
                         }
                     }
                 }
-            }
-            catch (IOException ex)
-            {
-                outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
-                customPane.OutputStringThreadSafe($"\nAn error has occurred: {ex.Message}");
+                catch (IOException ex)
+                {
+                    outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
+                    customPane.OutputStringThreadSafe($"\nAn error has occurred: {ex.Message}");
+                }
             }
         }
         private static async void OnLineChanged(TextPoint startPoint, TextPoint endPoint, int hint)
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            try
+            if (configured)
             {
-                if (startPoint.Parent != null & startPoint.Parent.Parent != null)
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                try
                 {
-                    Tracker tracker = Instance.trackers.Find(t =>
+                    if (startPoint.Parent != null & startPoint.Parent.Parent != null)
                     {
-                        ThreadHelper.ThrowIfNotOnUIThread();
-                        return t.FileName == startPoint.Parent.Parent.ActiveWindow.Document.Name && t.Path == startPoint.Parent.Parent.ActiveWindow.Document.FullName;
-                    });
-                    if (tracker != null)
-                    {
-                        string modifiedText = startPoint.CreateEditPoint().GetText(endPoint);
-                        modifiedText = modifiedText.Trim();
-                        if ((modifiedText.Length == 1 || modifiedText == "\r\n" || modifiedText == "\r" || modifiedText == "\n") && IsAValidCharacter(modifiedText))
+                        TbTracker tracker = Instance.trackers.Find(t =>
                         {
-                            tracker.NewKeysPressed++;
-                            tracker.TotalKeysPressed++;
-
-                            tracker.TotalCharacters++;
-                            tracker.NewCharacters++;
-
-                            outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
-                            customPane.OutputStringThreadSafe($"\nCharacter entered by the user in {tracker.FileName}");
-                        }
-                        else
+                            ThreadHelper.ThrowIfNotOnUIThread();
+                            return t.FileName == startPoint.Parent.Parent.ActiveWindow.Document.Name && t.Path == startPoint.Parent.Parent.ActiveWindow.Document.FullName;
+                        });
+                        if (tracker != null)
                         {
-                            tracker.TotalCharacters += modifiedText.Length;
-                            tracker.NewCharacters += modifiedText.Length;
+                            string modifiedText = startPoint.CreateEditPoint().GetText(endPoint);
+                            modifiedText = modifiedText.Trim();
+                            if ((modifiedText.Length == 1 || modifiedText == "\r\n" || modifiedText == "\r" || modifiedText == "\n") && IsAValidCharacter(modifiedText))
+                            {
+                                tracker.CharactersTracked++;
+                                tracker.KeysPressed++;
+
+                                outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
+                                customPane.OutputStringThreadSafe($"\nCharacter entered by the user in {tracker.FileName}");
+                            }
+                            else
+                            {
+                                tracker.CharactersTracked += modifiedText.Length;
+                            }
                         }
                     }
                 }
-            }
-            catch (IOException ex)
-            {
-                outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
-                customPane.OutputStringThreadSafe($"\nAn error has ocurred: {ex.Message}");
+                catch (IOException ex)
+                {
+                    outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
+                    customPane.OutputStringThreadSafe($"\nAn error has ocurred: {ex.Message}");
+                }
             }
         }
         private static bool IsAValidCharacter(string text)
@@ -319,29 +436,19 @@ namespace DevTimeMonitor
         #region REPORTER
         private static void ShowStatistics(object sender, EventArgs e)
         {
-            List<Tracker> data = dataManager.ReadAll();
-            int totalFiles = data.Count;
-            int totalCharacters = 0;
-            int totalCharactersByUser = 0;
-            int totalCharactersByAI = 0;
-
-            for(int i = 0; i < data.Count; i++) {
-                totalCharacters += data[i].TotalCharacters;
-                totalCharactersByUser += data[i].TotalKeysPressed;
-            }
-
-            totalCharactersByAI += totalCharacters - totalCharactersByUser;
-
-            double totalCharactersByUserPercent = 0.0;
-            double totalCharactersByAIPercent = 0.0;
-            if (totalCharacters > 0)
+            if (configured)
             {
-                totalCharactersByUserPercent = (double)totalCharactersByUser / totalCharacters;
-                totalCharactersByAIPercent = (double)totalCharactersByAI / totalCharacters;
+                Report report = new Report();
+                report.Show();
             }
+        }
+        #endregion
 
-            Report report = new Report(user, totalFiles, totalCharacters, totalCharactersByUser, totalCharactersByAI, totalCharactersByUserPercent, totalCharactersByAIPercent);
-            report.Show();
+        #region Settings
+        public static async void OpenSettings(object sender, EventArgs e)
+        {
+            Settings settings = new Settings();
+            settings.Show();
         }
         #endregion
     }
