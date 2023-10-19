@@ -480,7 +480,7 @@ namespace DevTimeMonitor
                 try
                 {
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    if (window.Kind == "Document" && window.Document != null)
+                    if (window.Kind == "Document")
                     {
                         TbTracker tracker = Instance.trackers.Find(t =>
                         {
