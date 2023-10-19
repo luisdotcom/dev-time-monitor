@@ -120,7 +120,7 @@ namespace DevTimeMonitor.Views
                             settings.Configured = true;
                             settingsHelper.UpdateSettings(settings);
 
-                            lblError.Text = "LogIn successful, Now you can start DevTimeMonitor.";
+                            lblError.Text = "Logged in! Start using DevTimeMonitor.";
                             btnLogin.Visible = false;
                             lblSignUp.Visible = false;
                         }

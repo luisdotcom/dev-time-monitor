@@ -178,7 +178,7 @@ namespace DevTimeMonitor
                     {
                         foreach (Window window in dte.Windows)
                         {
-                            if (window.Kind == "Document")
+                            if (window.Kind == "Document" && window.Document != null)
                             {
                                 Instance.OnWindowCreated(window);
                             }
@@ -194,7 +194,7 @@ namespace DevTimeMonitor
 
                     using (var context = new ApplicationDBContext())
                     {
-                        Instance.trackers = context.Trackers.ToList();
+                        Instance.trackers = context.Trackers.Where(t => t.UserId == user.Id).ToList();
                         TbDailyLog dailyLog = context.DailyLogs.Where(d => d.UserId == user.Id).FirstOrDefault() ?? new TbDailyLog()
                         {
                             UserId = user.Id
@@ -395,10 +395,10 @@ namespace DevTimeMonitor
                 try
                 {
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    if (window.Kind == "Document")
+                    if (window.Kind == "Document" && window.Document != null)
                     {
                         Document document = window.Document;
-                        if (!document.ReadOnly)
+                        if (!document.ReadOnly && !document.FullName.Contains(".csproj"))
                         {
                             if (textEditorEvents == null)
                             {
@@ -418,7 +418,7 @@ namespace DevTimeMonitor
                                 DateTime currentTime = DateTime.Now;
                                 using (var context = new ApplicationDBContext())
                                 {
-                                    TbTracker tracker = context.Trackers.Where(t => t.ProjectName == projectName && t.FileName == fileName).FirstOrDefault() ?? new TbTracker()
+                                    TbTracker tracker = context.Trackers.Where(t => t.UserId == user.Id && t.ProjectName == projectName && t.FileName == fileName).FirstOrDefault() ?? new TbTracker()
                                     {
                                         Id = Instance.trackers.Count,
                                         Path = filePath,
@@ -429,7 +429,7 @@ namespace DevTimeMonitor
                                         UserId = user.Id
                                     };
 
-                                    if (Instance.trackers.Find(t => t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName) == null)
+                                    if (Instance.trackers.Find(t => t.UserId == user.Id  && t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName) == null)
                                     {
                                         Instance.trackers.Add(tracker);
                                         context.Trackers.Add(tracker);
@@ -480,7 +480,7 @@ namespace DevTimeMonitor
                 try
                 {
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    if (window.Kind == "Document")
+                    if (window.Kind == "Document" && window.Document != null)
                     {
                         TbTracker tracker = Instance.trackers.Find(t =>
                         {
@@ -499,7 +499,7 @@ namespace DevTimeMonitor
 
                                 using (var context = new ApplicationDBContext())
                                 {
-                                    if (context.Trackers.Where(t => t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName).Any())
+                                    if (context.Trackers.Where(t => t.UserId == user.Id && t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName).Any())
                                     {
                                         context.Entry(tracker).State = EntityState.Modified;
                                     }

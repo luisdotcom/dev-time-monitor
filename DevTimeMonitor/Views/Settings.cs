@@ -46,7 +46,7 @@ namespace DevTimeMonitor.Views
                     connection.Close();
 
                     configured = true;
-                    lblMessage.Text = "Settings established.";
+                    lblMessage.Text = "Connection established, close this window.";
 
                     BtnCancel.Visible = false;
                     BtnSave.Visible = false;
