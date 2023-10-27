@@ -13,7 +13,7 @@ namespace DevTimeMonitor.Migrations
         
         string IMigrationMetadata.Id
         {
-            get { return "202310121612270_Inicial"; }
+            get { return "202310271924305_Inicial"; }
         }
         
         string IMigrationMetadata.Source

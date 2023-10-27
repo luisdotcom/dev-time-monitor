@@ -1,5 +1,4 @@
-﻿using DevTimeMonitor.DTOs;
-using DevTimeMonitor.Entities;
+﻿using DevTimeMonitor.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,15 +8,14 @@ namespace DevTimeMonitor.Views
 {
     public partial class Report : Form
     {
-        private static readonly SettingsHelper settingsHelper = new SettingsHelper();
-        private static readonly SettingsDTO settings = settingsHelper.ReadSettings();
         private readonly TbUser user;
         public Report()
         {
             InitializeComponent();
-            using (var context = new ApplicationDBContext())
+            using (ApplicationDBContext context = new ApplicationDBContext())
             {
-                user = context.Users.Where(u => u.UserName == settings.User).FirstOrDefault();
+                SettingsPage settingsPage = SettingsPage.GetLiveInstanceAsync().GetAwaiter().GetResult();
+                user = context.Users.Where(u => u.UserName == settingsPage.UserName).FirstOrDefault();
             }
             SetTotals();
             SetDays();
@@ -30,7 +28,7 @@ namespace DevTimeMonitor.Views
 
         private void SetTotals()
         {
-            using (var context = new ApplicationDBContext())
+            using (ApplicationDBContext context = new ApplicationDBContext())
             {
                 List<TbTracker> data = context.Trackers.Where(t => t.UserId == user.Id).ToList();
                 if (data.Count > 0)
@@ -66,7 +64,7 @@ namespace DevTimeMonitor.Views
         }
         private void SetDays()
         {
-            using (var context = new ApplicationDBContext())
+            using (ApplicationDBContext context = new ApplicationDBContext())
             {
                 TbDailyLog dailyLog = context.DailyLogs.Where(d => d.UserId == user.Id).FirstOrDefault();
                 if (dailyLog != null)
@@ -76,6 +74,8 @@ namespace DevTimeMonitor.Views
                     chBxWednesday.Checked = dailyLog.Wednesday;
                     chBxThursday.Checked = dailyLog.Thursday;
                     chBxFriday.Checked = dailyLog.Friday;
+                    chBxSaturday.Checked = dailyLog.Saturday;
+                    chBxSunday.Checked = dailyLog.Sunday;
                 }
             }
         }

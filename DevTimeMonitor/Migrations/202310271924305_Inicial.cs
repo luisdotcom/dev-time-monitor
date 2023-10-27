@@ -18,6 +18,8 @@
                         Wednesday = c.Boolean(),
                         Thursday = c.Boolean(),
                         Friday = c.Boolean(),
+                        Saturday = c.Boolean(),
+                        Sunday = c.Boolean(),
                     })
                 .PrimaryKey(t => t.Id)
                 .ForeignKey("dbo.TbUsers", t => t.UserId, cascadeDelete: true)

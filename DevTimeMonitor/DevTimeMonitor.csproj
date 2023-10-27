@@ -50,7 +50,6 @@
   <ItemGroup>
     <Compile Include="ApplicationDBContext.cs" />
     <Compile Include="DevTimeMonitor.cs" />
-    <Compile Include="DTOs\SettingsDTO.cs" />
     <Compile Include="Entities\Configurations\TbDailyLogConfig.cs" />
     <Compile Include="Entities\Configurations\TbErrorConfig.cs" />
     <Compile Include="Entities\Configurations\TbTrackerConfig.cs" />
@@ -59,24 +58,18 @@
     <Compile Include="Entities\TbError.cs" />
     <Compile Include="Entities\TbTracker.cs" />
     <Compile Include="Entities\TbUser.cs" />
-    <Compile Include="Migrations\202310121612270_Inicial.cs" />
-    <Compile Include="Migrations\202310121612270_Inicial.designer.cs">
-      <DependentUpon>202310121612270_Inicial.cs</DependentUpon>
+    <Compile Include="Migrations\202310271924305_Inicial.cs" />
+    <Compile Include="Migrations\202310271924305_Inicial.designer.cs">
+      <DependentUpon>202310271924305_Inicial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Options\SettingsPage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DevTimeMonitorPackage.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsHelper.cs" />
-    <Compile Include="Views\Settings.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Views\Settings.Designer.cs">
-      <DependentUpon>Settings.cs</DependentUpon>
     </Compile>
     <Compile Include="Views\Login.cs">
       <SubType>Form</SubType>
@@ -90,14 +83,16 @@
     <Compile Include="Views\Report.Designer.cs">
       <DependentUpon>Report.cs</DependentUpon>
     </Compile>
+    <Compile Include="Views\Settings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Views\Settings.Designer.cs">
+      <DependentUpon>Settings.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Preview.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="settings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="source.extension.vsixmanifest">
@@ -109,6 +104,7 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Data" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
@@ -118,11 +114,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Community.VisualStudio.Toolkit.17">
+      <Version>17.0.507</Version>
+    </PackageReference>
     <PackageReference Include="EntityFramework">
       <Version>6.4.4</Version>
-    </PackageReference>
-    <PackageReference Include="EnvDTE">
-      <Version>17.7.37355</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.7.37357" ExcludeAssets="runtime">
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -157,15 +153,12 @@
     <Content Include="Resources\stop.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\202310121612270_Inicial.resx">
-      <DependentUpon>202310121612270_Inicial.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\202310271924305_Inicial.resx">
+      <DependentUpon>202310271924305_Inicial.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Views\Settings.resx">
-      <DependentUpon>Settings.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Views\Login.resx">
       <DependentUpon>Login.cs</DependentUpon>
@@ -173,7 +166,11 @@
     <EmbeddedResource Include="Views\Report.resx">
       <DependentUpon>Report.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Views\Settings.resx">
+      <DependentUpon>Settings.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

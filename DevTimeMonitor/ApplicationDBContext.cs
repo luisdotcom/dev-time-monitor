@@ -1,9 +1,5 @@
-﻿using DevTimeMonitor.DTOs;
-using DevTimeMonitor.Entities;
-using DevTimeMonitor.Views;
-using Newtonsoft.Json;
+﻿using DevTimeMonitor.Entities;
 using System.Data.Entity;
-using System.IO;
 using System.Reflection;
 
 namespace DevTimeMonitor
@@ -17,11 +13,8 @@ namespace DevTimeMonitor
 
         public ApplicationDBContext() : base("DefaultConnection")
         {
-            string jsonFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),"settings.json");
-            string jsonContent = File.ReadAllText(jsonFilePath);
-
-            SettingsDTO settings = JsonConvert.DeserializeObject<SettingsDTO>(jsonContent);
-            this.Database.Connection.ConnectionString = settings.DefaultConnection;
+            SettingsPage settingsPage = SettingsPage.GetLiveInstanceAsync().GetAwaiter().GetResult();
+            Database.Connection.ConnectionString = settingsPage.ConnectionString;
         }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
@@ -29,6 +22,5 @@ namespace DevTimeMonitor
             base.OnModelCreating(modelBuilder);
             modelBuilder.Configurations.AddFromAssembly(Assembly.GetExecutingAssembly());
         }
-
     }
 }

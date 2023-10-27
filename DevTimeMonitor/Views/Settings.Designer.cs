@@ -36,10 +36,11 @@
             this.BtnSave = new System.Windows.Forms.Button();
             this.txtBxConnectionString = new System.Windows.Forms.TextBox();
             this.BtnCancel = new System.Windows.Forms.Button();
-            this.lblMessage = new System.Windows.Forms.Label();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.chBxActivateExtension = new System.Windows.Forms.CheckBox();
+            this.btnTestConnection = new System.Windows.Forms.Button();
+            this.txtBxMessage = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.lblTitle)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // Title
@@ -85,7 +86,7 @@
             this.lblTotal.AutoSize = true;
             this.lblTotal.Font = new System.Drawing.Font("Verdana", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTotal.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.lblTotal.Location = new System.Drawing.Point(23, 193);
+            this.lblTotal.Location = new System.Drawing.Point(23, 125);
             this.lblTotal.Name = "lblTotal";
             this.lblTotal.Size = new System.Drawing.Size(121, 13);
             this.lblTotal.TabIndex = 19;
@@ -109,20 +110,21 @@
             // 
             // txtBxConnectionString
             // 
-            this.txtBxConnectionString.Location = new System.Drawing.Point(26, 212);
+            this.txtBxConnectionString.Location = new System.Drawing.Point(26, 144);
             this.txtBxConnectionString.Multiline = true;
             this.txtBxConnectionString.Name = "txtBxConnectionString";
             this.txtBxConnectionString.Size = new System.Drawing.Size(300, 50);
             this.txtBxConnectionString.TabIndex = 26;
+            this.txtBxConnectionString.TextChanged += new System.EventHandler(this.TxtBxConnectionString_TextChanged);
             // 
             // BtnCancel
             // 
             this.BtnCancel.BackColor = System.Drawing.SystemColors.Window;
             this.BtnCancel.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.BtnCancel.FlatAppearance.BorderColor = System.Drawing.Color.Crimson;
+            this.BtnCancel.FlatAppearance.BorderColor = System.Drawing.Color.DarkSlateBlue;
             this.BtnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.BtnCancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.BtnCancel.ForeColor = System.Drawing.Color.Crimson;
+            this.BtnCancel.ForeColor = System.Drawing.Color.DarkSlateBlue;
             this.BtnCancel.Location = new System.Drawing.Point(26, 313);
             this.BtnCancel.Name = "BtnCancel";
             this.BtnCancel.Size = new System.Drawing.Size(148, 23);
@@ -131,28 +133,55 @@
             this.BtnCancel.UseVisualStyleBackColor = false;
             this.BtnCancel.Click += new System.EventHandler(this.BtnCancel_Click);
             // 
-            // lblMessage
+            // label1
             // 
-            this.lblMessage.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.lblMessage.Font = new System.Drawing.Font("Verdana", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblMessage.ForeColor = System.Drawing.Color.Crimson;
-            this.lblMessage.Location = new System.Drawing.Point(23, 278);
-            this.lblMessage.Name = "lblMessage";
-            this.lblMessage.Size = new System.Drawing.Size(303, 20);
-            this.lblMessage.TabIndex = 28;
-            this.lblMessage.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Verdana", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.label1.Location = new System.Drawing.Point(35, 216);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(0, 13);
+            this.label1.TabIndex = 29;
             // 
-            // pictureBox1
+            // chBxActivateExtension
             // 
-            this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.InitialImage = null;
-            this.pictureBox1.Location = new System.Drawing.Point(67, 117);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(224, 61);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox1.TabIndex = 29;
-            this.pictureBox1.TabStop = false;
+            this.chBxActivateExtension.AutoSize = true;
+            this.chBxActivateExtension.Location = new System.Drawing.Point(26, 219);
+            this.chBxActivateExtension.Name = "chBxActivateExtension";
+            this.chBxActivateExtension.Size = new System.Drawing.Size(134, 17);
+            this.chBxActivateExtension.TabIndex = 30;
+            this.chBxActivateExtension.Text = "Autostart the extension";
+            this.chBxActivateExtension.UseVisualStyleBackColor = true;
+            // 
+            // btnTestConnection
+            // 
+            this.btnTestConnection.BackColor = System.Drawing.Color.DarkSlateBlue;
+            this.btnTestConnection.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnTestConnection.FlatAppearance.BorderSize = 0;
+            this.btnTestConnection.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnTestConnection.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnTestConnection.ForeColor = System.Drawing.SystemColors.Window;
+            this.btnTestConnection.Location = new System.Drawing.Point(26, 190);
+            this.btnTestConnection.Name = "btnTestConnection";
+            this.btnTestConnection.Size = new System.Drawing.Size(300, 23);
+            this.btnTestConnection.TabIndex = 31;
+            this.btnTestConnection.Text = "TEST CONNECTION";
+            this.btnTestConnection.UseVisualStyleBackColor = false;
+            this.btnTestConnection.Click += new System.EventHandler(this.BtnTestConnection_Click);
+            // 
+            // txtBxMessage
+            // 
+            this.txtBxMessage.BackColor = System.Drawing.SystemColors.Window;
+            this.txtBxMessage.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txtBxMessage.ForeColor = System.Drawing.Color.Crimson;
+            this.txtBxMessage.Location = new System.Drawing.Point(26, 255);
+            this.txtBxMessage.Multiline = true;
+            this.txtBxMessage.Name = "txtBxMessage";
+            this.txtBxMessage.ReadOnly = true;
+            this.txtBxMessage.Size = new System.Drawing.Size(300, 39);
+            this.txtBxMessage.TabIndex = 0;
+            this.txtBxMessage.TabStop = false;
+            this.txtBxMessage.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // Settings
             // 
@@ -160,8 +189,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
             this.ClientSize = new System.Drawing.Size(350, 350);
-            this.Controls.Add(this.pictureBox1);
-            this.Controls.Add(this.lblMessage);
+            this.Controls.Add(this.txtBxMessage);
+            this.Controls.Add(this.btnTestConnection);
+            this.Controls.Add(this.chBxActivateExtension);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.BtnCancel);
             this.Controls.Add(this.txtBxConnectionString);
             this.Controls.Add(this.BtnSave);
@@ -177,7 +208,6 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "DevTimeMonitor";
             ((System.ComponentModel.ISupportInitialize)(this.lblTitle)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -192,7 +222,9 @@
         private System.Windows.Forms.Button BtnSave;
         private System.Windows.Forms.TextBox txtBxConnectionString;
         private System.Windows.Forms.Button BtnCancel;
-        private System.Windows.Forms.Label lblMessage;
-        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.CheckBox chBxActivateExtension;
+        private System.Windows.Forms.Button btnTestConnection;
+        private System.Windows.Forms.TextBox txtBxMessage;
     }
 }

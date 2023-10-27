@@ -80,6 +80,7 @@
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(29, 28);
             this.button1.TabIndex = 15;
+            this.button1.TabStop = false;
             this.button1.UseVisualStyleBackColor = false;
             this.button1.Click += new System.EventHandler(this.BtnClose_Click);
             // 
@@ -97,6 +98,7 @@
             this.btnSettings.Name = "btnSettings";
             this.btnSettings.Size = new System.Drawing.Size(29, 28);
             this.btnSettings.TabIndex = 16;
+            this.btnSettings.TabStop = false;
             this.btnSettings.UseVisualStyleBackColor = false;
             this.btnSettings.Click += new System.EventHandler(this.BtnSettings_Click);
             // 
@@ -106,7 +108,7 @@
             this.txtBxUserName.Location = new System.Drawing.Point(89, 204);
             this.txtBxUserName.Name = "txtBxUserName";
             this.txtBxUserName.Size = new System.Drawing.Size(183, 20);
-            this.txtBxUserName.TabIndex = 17;
+            this.txtBxUserName.TabIndex = 1;
             // 
             // txtBxPassword
             // 
@@ -115,7 +117,7 @@
             this.txtBxPassword.Name = "txtBxPassword";
             this.txtBxPassword.PasswordChar = '*';
             this.txtBxPassword.Size = new System.Drawing.Size(183, 20);
-            this.txtBxPassword.TabIndex = 18;
+            this.txtBxPassword.TabIndex = 2;
             // 
             // lblTotal
             // 
@@ -150,7 +152,7 @@
             this.btnLogin.Location = new System.Drawing.Point(89, 312);
             this.btnLogin.Name = "btnLogin";
             this.btnLogin.Size = new System.Drawing.Size(183, 23);
-            this.btnLogin.TabIndex = 22;
+            this.btnLogin.TabIndex = 3;
             this.btnLogin.Text = "LogIn";
             this.btnLogin.UseVisualStyleBackColor = false;
             this.btnLogin.Click += new System.EventHandler(this.BtnLogin_Click);
@@ -164,7 +166,7 @@
             this.lblSignUp.Location = new System.Drawing.Point(158, 348);
             this.lblSignUp.Name = "lblSignUp";
             this.lblSignUp.Size = new System.Drawing.Size(47, 13);
-            this.lblSignUp.TabIndex = 21;
+            this.lblSignUp.TabIndex = 4;
             this.lblSignUp.Text = "SignUp";
             this.lblSignUp.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblSignUp.Click += new System.EventHandler(this.LblSignUp_Click);
@@ -198,7 +200,7 @@
             this.txtBxName.Location = new System.Drawing.Point(89, 154);
             this.txtBxName.Name = "txtBxName";
             this.txtBxName.Size = new System.Drawing.Size(183, 20);
-            this.txtBxName.TabIndex = 24;
+            this.txtBxName.TabIndex = 0;
             this.txtBxName.Visible = false;
             // 
             // Login

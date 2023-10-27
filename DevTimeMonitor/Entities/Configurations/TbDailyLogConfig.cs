@@ -13,6 +13,8 @@ namespace DevTimeMonitor.Entities.Configurations
             Property(e => e.Wednesday).IsOptional();
             Property(e => e.Thursday).IsOptional();
             Property(e => e.Friday).IsOptional();
+            Property(e => e.Saturday).IsOptional();
+            Property(e => e.Sunday).IsOptional();
         }
     }
 }

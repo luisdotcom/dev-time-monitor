@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" ?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="DevTimeMonitor.extension.luisdotcom" Version="2.3" Language="en-US" Publisher="Luis Enrique Gómez Mena" />
+        <Identity Id="DevTimeMonitor.extension.luisdotcom" Version="2.4" Language="en-US" Publisher="Luis Enrique Gómez Mena" />
         <DisplayName>DevTimeMonitor</DisplayName>
         <Description xml:space="preserve">DevTimeMonitor counts the characters you enter manually and compares them to the amount of automatically generated code, allowing you to measure the efficiency of using tools like GitHub Copilot.</Description>
         <Icon>DevTimeMonitor.png</Icon>

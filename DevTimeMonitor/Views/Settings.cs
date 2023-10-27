@@ -1,64 +1,102 @@
-﻿using DevTimeMonitor.DTOs;
-using System;
+﻿using System;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DevTimeMonitor.Views
 {
     public partial class Settings : Form
     {
-        private static bool configured = false;
-        private static readonly SettingsHelper settingsHelper = new SettingsHelper();
+        private static SettingsPage settingsPage;
         public Settings()
         {
             InitializeComponent();
-            SettingsDTO settings = settingsHelper.ReadSettings();
-            txtBxConnectionString.Text = settings.DefaultConnection;
+            settingsPage = SettingsPage.GetLiveInstanceAsync().GetAwaiter().GetResult();
+            txtBxConnectionString.Text = settingsPage.ConnectionString;
+            chBxActivateExtension.Checked = settingsPage.Autostart;
         }
         private void BtnClose_Click(object sender, EventArgs e)
         {
-            if (configured)
-            {
-                Login login = new Login();
-                login.Show();
-            }
             Close();
+        }
+
+        private async void BtnTestConnection_Click(object sender, EventArgs e)
+        {
+            btnTestConnection.Enabled = false;
+            btnTestConnection.Text = "Trying to connect to the database";
+            btnTestConnection.ForeColor = Color.White;
+
+            await TestConnectionAsync();
+        }
+        private async Task<bool> TestConnectionAsync()
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(txtBxConnectionString.Text))
+                {
+                    await connection.OpenAsync();
+                    await Task.Delay(3000);
+                    btnTestConnection.Text = "Connection established";
+                    btnTestConnection.BackColor = Color.DarkSeaGreen;
+                    connection.Close();
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                btnTestConnection.Text = "Connection not established";
+                btnTestConnection.BackColor = Color.Crimson;
+
+                txtBxMessage.Text = ex.Message;
+
+                return false;
+            }
+        }
+        private void TxtBxConnectionString_TextChanged(object sender, EventArgs e)
+        {
+            if (btnTestConnection.Text != "TEST CONNECTION")
+            {
+                btnTestConnection.Text = "TEST CONNECTION";
+                btnTestConnection.BackColor = Color.DarkSlateBlue;
+                btnTestConnection.Enabled = true;
+                txtBxMessage.Text = "";
+            }
         }
 
         private void BtnCancel_Click(object sender, EventArgs e)
         {
             Close();
         }
-
-        private void BtnSave_Click(object sender, EventArgs e)
+        private async void BtnSave_Click(object sender, EventArgs e)
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(txtBxConnectionString.Text))
+                settingsPage = await SettingsPage.GetLiveInstanceAsync();
+                settingsPage.Autostart = chBxActivateExtension.Checked;
+
+                if (txtBxConnectionString.Text != settingsPage.ConnectionString)
                 {
-                    connection.Open();
+                    if (await TestConnectionAsync())
+                    {
+                        settingsPage.ConnectionString = txtBxConnectionString.Text;
+                        await settingsPage.SaveAsync();
 
-                    SettingsDTO settings = settingsHelper.ReadSettings();
-                    settings.DefaultConnection = txtBxConnectionString.Text;
-                    settingsHelper.UpdateSettings(settings);
-
-                    connection.Close();
-
-                    configured = true;
-                    lblMessage.Text = "Connection established, close this window.";
-
-                    BtnCancel.Visible = false;
-                    BtnSave.Visible = false;
+                        Login login = new Login();
+                        login.Show();
+                        Close();
+                    }
                 }
-            }
-            catch (SqlException ex)
-            {
-                lblMessage.Text = "Could not connect, check the connection string.";
+                else
+                {
+                    await settingsPage.SaveAsync();
+                    txtBxMessage.Text = "Configuration saved.";
+                }
             }
             catch
             {
-                lblMessage.Text = "The configuration could not be saved.";
+                txtBxMessage.Text = "The configuration could not be saved.";
             }
         }
     }

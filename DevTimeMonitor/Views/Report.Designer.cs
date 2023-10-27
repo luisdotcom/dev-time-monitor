@@ -41,6 +41,10 @@
             this.button1 = new System.Windows.Forms.Button();
             this.chBxMonday = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.chBxSunday = new System.Windows.Forms.CheckBox();
+            this.lblSunday = new System.Windows.Forms.Label();
+            this.chBxSaturday = new System.Windows.Forms.CheckBox();
+            this.lblSaturday = new System.Windows.Forms.Label();
             this.chBxFriday = new System.Windows.Forms.CheckBox();
             this.chBxThursday = new System.Windows.Forms.CheckBox();
             this.chBxWednesday = new System.Windows.Forms.CheckBox();
@@ -192,6 +196,10 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.chBxSunday);
+            this.groupBox1.Controls.Add(this.lblSunday);
+            this.groupBox1.Controls.Add(this.chBxSaturday);
+            this.groupBox1.Controls.Add(this.lblSaturday);
             this.groupBox1.Controls.Add(this.chBxFriday);
             this.groupBox1.Controls.Add(this.chBxThursday);
             this.groupBox1.Controls.Add(this.chBxWednesday);
@@ -210,6 +218,48 @@
             this.groupBox1.TabIndex = 17;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Days tracked";
+            // 
+            // chBxSunday
+            // 
+            this.chBxSunday.AutoSize = true;
+            this.chBxSunday.Enabled = false;
+            this.chBxSunday.Location = new System.Drawing.Point(218, 43);
+            this.chBxSunday.Name = "chBxSunday";
+            this.chBxSunday.Size = new System.Drawing.Size(15, 14);
+            this.chBxSunday.TabIndex = 28;
+            this.chBxSunday.UseVisualStyleBackColor = true;
+            // 
+            // lblSunday
+            // 
+            this.lblSunday.AutoSize = true;
+            this.lblSunday.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSunday.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblSunday.Location = new System.Drawing.Point(213, 23);
+            this.lblSunday.Name = "lblSunday";
+            this.lblSunday.Size = new System.Drawing.Size(28, 17);
+            this.lblSunday.TabIndex = 27;
+            this.lblSunday.Text = "Su";
+            // 
+            // chBxSaturday
+            // 
+            this.chBxSaturday.AutoSize = true;
+            this.chBxSaturday.Enabled = false;
+            this.chBxSaturday.Location = new System.Drawing.Point(185, 43);
+            this.chBxSaturday.Name = "chBxSaturday";
+            this.chBxSaturday.Size = new System.Drawing.Size(15, 14);
+            this.chBxSaturday.TabIndex = 26;
+            this.chBxSaturday.UseVisualStyleBackColor = true;
+            // 
+            // lblSaturday
+            // 
+            this.lblSaturday.AutoSize = true;
+            this.lblSaturday.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSaturday.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblSaturday.Location = new System.Drawing.Point(180, 23);
+            this.lblSaturday.Name = "lblSaturday";
+            this.lblSaturday.Size = new System.Drawing.Size(27, 17);
+            this.lblSaturday.TabIndex = 25;
+            this.lblSaturday.Text = "Sa";
             // 
             // chBxFriday
             // 
@@ -459,5 +509,9 @@
         private System.Windows.Forms.Label lblTuesday;
         private System.Windows.Forms.Label lblMonday;
         private System.Windows.Forms.CheckBox chBxFriday;
+        private System.Windows.Forms.CheckBox chBxSaturday;
+        private System.Windows.Forms.Label lblSaturday;
+        private System.Windows.Forms.CheckBox chBxSunday;
+        private System.Windows.Forms.Label lblSunday;
     }
 }

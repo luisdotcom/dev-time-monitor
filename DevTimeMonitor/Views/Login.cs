@@ -1,5 +1,4 @@
-﻿using DevTimeMonitor.DTOs;
-using DevTimeMonitor.Entities;
+﻿using DevTimeMonitor.Entities;
 using System;
 using System.Linq;
 using System.Windows.Forms;
@@ -9,11 +8,11 @@ namespace DevTimeMonitor.Views
     public partial class Login : Form
     {
         private bool signUp = false;
-        private static readonly SettingsHelper settingsHelper = new SettingsHelper();
-
+        private SettingsPage settingsPage;
         public Login()
         {
             InitializeComponent();
+            settingsPage = SettingsPage.GetLiveInstanceAsync().GetAwaiter().GetResult();
         }
         private void BtnClose_Click(object sender, EventArgs e)
         {
@@ -33,7 +32,7 @@ namespace DevTimeMonitor.Views
 
             lblName.Visible = signUp;
             txtBxName.Visible = signUp;
-            btnLogin.Text = signUp ? "Accept" : "LogIn";
+            btnLogin.Text = signUp ? "SignUp" : "LogIn";
             lblSignUp.Text = signUp ? "Cancel" : "SignUp";
 
             txtBxName.Text = "";
@@ -65,31 +64,36 @@ namespace DevTimeMonitor.Views
                 }
                 if (valid)
                 {
-                    using (var context = new ApplicationDBContext())
+                    try
                     {
-                        if (context.Users.Where(u => u.UserName == txtBxUserName.Text).Any())
+                        using (var context = new ApplicationDBContext())
                         {
-                            lblError.Text = "Username already registered.";
-                            return;
-                        }
-                        if (context.Users.Where(u => u.Name == txtBxName.Text).Any())
-                        {
-                            lblError.Text = "Name already registered.";
-                            return;
-                        }
-                        TbUser newUser = new TbUser()
-                        {
-                            Name = txtBxName.Text,
-                            UserName = txtBxUserName.Text,
-                            Password = txtBxPassword.Text,
-                        };
+                            if (context.Users.Where(u => u.UserName == txtBxUserName.Text).Any())
+                            {
+                                lblError.Text = "Username already registered.";
+                                return;
+                            }
+                            if (context.Users.Where(u => u.Name == txtBxName.Text).Any())
+                            {
+                                lblError.Text = "Name already registered.";
+                                return;
+                            }
+                            TbUser newUser = new TbUser()
+                            {
+                                Name = txtBxName.Text,
+                                UserName = txtBxUserName.Text,
+                                Password = txtBxPassword.Text,
+                            };
 
-                        context.Users.Add(newUser);
-                        context.SaveChanges();
+                            context.Users.Add(newUser);
+                            context.SaveChanges();
 
-                        txtBxName.Text = "";
-                        txtBxPassword.Text = "";
-                        LblSignUp_Click(null, null);
+                            LblSignUp_Click(null, null);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        lblError.Text = ex.Message;
                     }
                 }
             }
@@ -110,25 +114,34 @@ namespace DevTimeMonitor.Views
 
                 if (valid)
                 {
-                    using (var context = new ApplicationDBContext())
+                    try
                     {
-                        bool exists = context.Users.Where(user => user.UserName == txtBxUserName.Text && user.Password == txtBxPassword.Text).Any();
-                        if (exists)
+                        using (var context = new ApplicationDBContext())
                         {
-                            SettingsDTO settings = settingsHelper.ReadSettings();
-                            settings.User = txtBxUserName.Text;
-                            settings.Configured = true;
-                            settingsHelper.UpdateSettings(settings);
+                            TbUser user = context.Users.Where(u => u.UserName == txtBxUserName.Text && u.Password == txtBxPassword.Text).FirstOrDefault();
+                            if (user != null)
+                            {
+                                settingsPage = SettingsPage.GetLiveInstanceAsync().GetAwaiter().GetResult();
+                                settingsPage.UserName = user.UserName;
+                                settingsPage.Name = user.Name;
+                                settingsPage.Password = user.Password;
+                                settingsPage.Logged = true;
+                                settingsPage.SaveAsync().GetAwaiter().GetResult();
 
-                            lblError.Text = "Logged in! Start using DevTimeMonitor.";
-                            btnLogin.Visible = false;
-                            lblSignUp.Visible = false;
+                                lblError.Text = "Logged in!";
+                                btnLogin.Visible = false;
+                                lblSignUp.Visible = false;
+                            }
+                            else
+                            {
+                                txtBxPassword.Text = "";
+                                lblError.Text = "Incorrect user or password";
+                            }
                         }
-                        else
-                        {
-                            txtBxPassword.Text = "";
-                            lblError.Text = "Incorrect user or password";
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        lblError.Text = ex.Message;
                     }
                 }
             }
