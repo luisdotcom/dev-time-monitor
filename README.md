@@ -2,11 +2,11 @@
  
  #### Author
 
- Ing. Luis Enrique G�mez Mena - *FullStack Developer* 
+ Ing. Luis Enrique Gomez Mena - *FullStack Developer* 
 
  #### Description 
 
-DevTimeMonitor is an extension for Visual Studio 2022 that counts the characters you enter manually and compares them to the amount of automatically generated code, allowing you to measure the efficiency of using tools like GitHub Copilot.
+DevTimeMonitor is an extension for Visual Studio 2022 that counts the characters you enter manually and compares them to the amount of automatically generated code, allowing you to measure the efficiency of using tools like GitHub Copilot and Chat-GPT.
 
  ##### Technologies
 

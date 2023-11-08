@@ -14,6 +14,7 @@ using System.Data.Entity.Migrations;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace DevTimeMonitor
@@ -34,11 +35,12 @@ namespace DevTimeMonitor
         private static TextEditorEvents textEditorEvents;
 
         private List<TbTracker> trackers;
-        private static TbUser user;
-        private static bool logged = false;
-        private static SettingsPage options;
+        private TbUser user;
+        private bool logged = false;
+        private SettingsPage options;
 
-        private readonly HashSet<string> FileTypes;
+        private static HashSet<string> FileTypes;
+
         private DevTimeMonitor(AsyncPackage package)
         {
             this.package = package ?? throw new ArgumentNullException(nameof(package));
@@ -71,7 +73,8 @@ namespace DevTimeMonitor
                 "tsx",
                 "xaml",
                 "razor",
-                "txt"
+                "txt",
+                "tt"
             };
         }
         public static DevTimeMonitor Instance { get; private set; }
@@ -98,19 +101,19 @@ namespace DevTimeMonitor
                     MenuCommand settingsSubItem = new MenuCommand(new EventHandler(OpenSettings), openSettingsSubCommandID);
                     commandService.AddCommand(settingsSubItem);
 
-                    options = await SettingsPage.GetLiveInstanceAsync();
-                    logged = options.Logged;
-                    if (logged)
+                    Instance.options = await SettingsPage.GetLiveInstanceAsync();
+                    Instance.logged = Instance.options.Logged;
+                    if (Instance.logged)
                     {
                         using (ApplicationDBContext context = new ApplicationDBContext())
                         {
-                            user = context.Users.Where(u => u.UserName == options.UserName).FirstOrDefault();
+                            Instance.user = context.Users.Where(u => u.UserName == Instance.options.UserName).FirstOrDefault();
                         }
                     }
 
-                    if (options.Autostart)
+                    if (Instance.options.Autostart)
                     {
-                        if (!logged)
+                        if (!Instance.logged)
                         {
                             OpenSettings(null, null);
                         }
@@ -124,14 +127,14 @@ namespace DevTimeMonitor
             }
             catch (Exception ex)
             {
-                if (logged)
+                if (Instance.logged)
                 {
                     using (ApplicationDBContext context = new ApplicationDBContext())
                     {
                         TbError error = new TbError()
                         {
                             Detail = ex.Message,
-                            UserId = user.Id
+                            UserId = Instance.user.Id
                         };
                         context.Errors.Add(error);
                         await context.SaveChangesAsync();
@@ -143,12 +146,18 @@ namespace DevTimeMonitor
         {
             try
             {
-                options = await SettingsPage.GetLiveInstanceAsync();
+                Instance.options = await SettingsPage.GetLiveInstanceAsync();
                 do
                 {
-                    options = await SettingsPage.GetLiveInstanceAsync();
+                    Instance.options = await SettingsPage.GetLiveInstanceAsync();
                     await Task.Delay(3000);
-                } while (!options.Logged);
+                } while (!Instance.options.Logged);
+
+                using (ApplicationDBContext context = new ApplicationDBContext())
+                {
+                    Instance.user = context.Users.Where(u => u.UserName == Instance.options.UserName).FirstOrDefault();
+                }
+                Instance.logged = true;
 
                 if (await package.GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
                 {
@@ -157,7 +166,7 @@ namespace DevTimeMonitor
                     MenuCommand stopTrackFilesCommand = commandService.FindCommand(new CommandID(CommandSet, StopDevTimeMonitor));
                     stopTrackFilesCommand.Enabled = false;
 
-                    if (options.Autostart)
+                    if (Instance.options.Autostart)
                     {
                         trackFilesCommand.Enabled = false;
                         stopTrackFilesCommand.Enabled = true;
@@ -166,23 +175,17 @@ namespace DevTimeMonitor
                     MenuCommand generateReportCommand = commandService.FindCommand(new CommandID(CommandSet, GenerateReport));
                     generateReportCommand.Enabled = true;
                 }
-
-                using (ApplicationDBContext context = new ApplicationDBContext())
-                {
-                    user = context.Users.Where(u => u.UserName == options.UserName).FirstOrDefault();
-                }
-                logged = true;
             }
             catch (Exception ex)
             {
-                if (logged)
+                if (Instance.logged)
                 {
                     using (ApplicationDBContext context = new ApplicationDBContext())
                     {
                         TbError error = new TbError()
                         {
                             Detail = ex.Message,
-                            UserId = user.Id
+                            UserId = Instance.user.Id
                         };
                         context.Errors.Add(error);
                         await context.SaveChangesAsync();
@@ -194,7 +197,7 @@ namespace DevTimeMonitor
         #region TRACKER
         private static async void TrackFiles(object sender, EventArgs e)
         {
-            if (logged)
+            if (Instance.logged)
             {
                 try
                 {
@@ -209,7 +212,11 @@ namespace DevTimeMonitor
                         {
                             if (window.Kind == "Document" && window.Document != null)
                             {
-                                Instance.OnWindowCreated(window);
+                                Document document = window.Document;
+                                if (!document.ReadOnly && FileTypes.Contains(document.FullName.Split('.').Last()))
+                                {
+                                    Instance.OnWindowCreated(window);
+                                }
                             }
                         }
 
@@ -223,10 +230,10 @@ namespace DevTimeMonitor
 
                     using (ApplicationDBContext context = new ApplicationDBContext())
                     {
-                        Instance.trackers = context.Trackers.Where(t => t.UserId == user.Id).ToList();
-                        TbDailyLog dailyLog = context.DailyLogs.Where(d => d.UserId == user.Id).FirstOrDefault() ?? new TbDailyLog()
+                        Instance.trackers = context.Trackers.Where(t => t.UserId == Instance.user.Id).ToList();
+                        TbDailyLog dailyLog = context.DailyLogs.Where(d => d.UserId == Instance.user.Id).FirstOrDefault() ?? new TbDailyLog()
                         {
-                            UserId = user.Id
+                            UserId = Instance.user.Id
                         };
 
                         DayOfWeek day = DateTime.Now.DayOfWeek;
@@ -297,7 +304,7 @@ namespace DevTimeMonitor
                         TbError error = new TbError()
                         {
                             Detail = ex.Message,
-                            UserId = user.Id
+                            UserId = Instance.user.Id
                         };
                         context.Errors.Add(error);
                         await context.SaveChangesAsync();
@@ -307,7 +314,7 @@ namespace DevTimeMonitor
         }
         private static async void StopTrackingFiles(object sender, EventArgs e)
         {
-            if (logged)
+            if (Instance.logged)
             {
                 try
                 {
@@ -344,7 +351,7 @@ namespace DevTimeMonitor
                         TbError error = new TbError()
                         {
                             Detail = ex.Message,
-                            UserId = user.Id
+                            UserId = Instance.user.Id
                         };
                         context.Errors.Add(error);
                         await context.SaveChangesAsync();
@@ -363,7 +370,7 @@ namespace DevTimeMonitor
             }
             catch (Exception ex)
             {
-                if (logged)
+                if (Instance.logged)
                 {
                     using (ApplicationDBContext context = new ApplicationDBContext())
                     {
@@ -376,17 +383,17 @@ namespace DevTimeMonitor
                         await context.SaveChangesAsync();
                     }
                 }
-                return "";
+                return "error";
             }
         }
         private async void OnWindowCreated(Window window)
         {
-            if (logged)
+            if (Instance.logged)
             {
                 try
                 {
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    if (window.Kind == "Document" && window.Document != null)
+                    if (window.Kind == "Document" && window.Document != null && window.Object != null && window.Document.Windows.Count <= 1)
                     {
                         Document document = window.Document;
                         if (!document.ReadOnly && FileTypes.Contains(document.FullName.Split('.').Last()))
@@ -400,8 +407,7 @@ namespace DevTimeMonitor
                             string projectName = window.Project.Name;
                             string fileName = filePath.Split('\\').Last();
                             string fileContent = await ReadFileContentAsync(filePath);
-
-                            if (fileContent != "")
+                            if (fileContent != "error")
                             {
                                 outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
                                 customPane.OutputStringThreadSafe($"\nFile: {fileName} opened.");
@@ -449,18 +455,17 @@ namespace DevTimeMonitor
                         context.Errors.Add(error);
                         await context.SaveChangesAsync();
                     }
-
                 }
             }
         }
         private async void OnWindowClosing(Window window)
         {
-            if (logged)
+            if (Instance.logged)
             {
                 try
                 {
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    if (window.Kind == "Document")
+                    if (window.Kind == "Document" && window.Object != null)
                     {
                         TbTracker tracker = Instance.trackers.Find(t =>
                         {
@@ -490,10 +495,10 @@ namespace DevTimeMonitor
 
                                     await context.SaveChangesAsync();
                                 }
-
-                                outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
-                                customPane.OutputStringThreadSafe($"\nFile: {tracker.FileName} closed.");
                             }
+
+                            outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
+                            customPane.OutputStringThreadSafe($"\nFile: {tracker.FileName} closed.");
                         }
                     }
                 }
@@ -515,7 +520,7 @@ namespace DevTimeMonitor
         }
         private static async void OnLineChanged(TextPoint startPoint, TextPoint endPoint, int hint)
         {
-            if (logged)
+            if (Instance.logged)
             {
                 try
                 {
@@ -542,7 +547,13 @@ namespace DevTimeMonitor
                             }
                             else
                             {
-                                tracker.CharactersTracked += modifiedText.Length;
+                                if (modifiedText.Trim() != "" && modifiedText != "\r\n" && modifiedText != "\r" && modifiedText != "\n")
+                                {
+                                    outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
+                                    customPane.OutputStringThreadSafe($"\nAutomatically generated characters in {tracker.FileName}");
+
+                                    tracker.CharactersTracked += modifiedText.Length;
+                                }
                             }
                         }
                     }
@@ -554,7 +565,7 @@ namespace DevTimeMonitor
                         TbError error = new TbError()
                         {
                             Detail = ex.Message,
-                            UserId = user.Id
+                            UserId = Instance.user.Id
                         };
                         context.Errors.Add(error);
                         await context.SaveChangesAsync();
@@ -572,7 +583,7 @@ namespace DevTimeMonitor
         #region REPORTER
         private static void ShowStatistics(object sender, EventArgs e)
         {
-            if (logged)
+            if (Instance.logged)
             {
                 Report report = new Report();
                 report.Show();

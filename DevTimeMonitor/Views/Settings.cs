@@ -15,6 +15,15 @@ namespace DevTimeMonitor.Views
             settingsPage = SettingsPage.GetLiveInstanceAsync().GetAwaiter().GetResult();
             txtBxConnectionString.Text = settingsPage.ConnectionString;
             chBxActivateExtension.Checked = settingsPage.Autostart;
+
+            if (settingsPage.Logged)
+            {
+                btnLogin.Text = "CHANGE USER";
+            }
+            else
+            {
+                btnLogin.Enabled = false;
+            }
         }
         private void BtnClose_Click(object sender, EventArgs e)
         {
@@ -92,12 +101,20 @@ namespace DevTimeMonitor.Views
                 {
                     await settingsPage.SaveAsync();
                     txtBxMessage.Text = "Configuration saved.";
+                    btnLogin.Enabled = true;
                 }
             }
             catch
             {
                 txtBxMessage.Text = "The configuration could not be saved.";
             }
+        }
+
+        private void BtnLogin_Click(object sender, EventArgs e)
+        {
+            Login login = new Login();
+            login.Show();
+            Close();
         }
     }
 }

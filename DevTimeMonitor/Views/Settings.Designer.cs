@@ -40,6 +40,7 @@
             this.chBxActivateExtension = new System.Windows.Forms.CheckBox();
             this.btnTestConnection = new System.Windows.Forms.Button();
             this.txtBxMessage = new System.Windows.Forms.TextBox();
+            this.btnLogin = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.lblTitle)).BeginInit();
             this.SuspendLayout();
             // 
@@ -174,14 +175,30 @@
             this.txtBxMessage.BackColor = System.Drawing.SystemColors.Window;
             this.txtBxMessage.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.txtBxMessage.ForeColor = System.Drawing.Color.Crimson;
-            this.txtBxMessage.Location = new System.Drawing.Point(26, 255);
+            this.txtBxMessage.Location = new System.Drawing.Point(26, 242);
             this.txtBxMessage.Multiline = true;
             this.txtBxMessage.Name = "txtBxMessage";
             this.txtBxMessage.ReadOnly = true;
-            this.txtBxMessage.Size = new System.Drawing.Size(300, 39);
+            this.txtBxMessage.Size = new System.Drawing.Size(300, 33);
             this.txtBxMessage.TabIndex = 0;
             this.txtBxMessage.TabStop = false;
             this.txtBxMessage.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // btnLogin
+            // 
+            this.btnLogin.BackColor = System.Drawing.Color.DarkSlateBlue;
+            this.btnLogin.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnLogin.FlatAppearance.BorderSize = 0;
+            this.btnLogin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLogin.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnLogin.ForeColor = System.Drawing.SystemColors.Window;
+            this.btnLogin.Location = new System.Drawing.Point(26, 284);
+            this.btnLogin.Name = "btnLogin";
+            this.btnLogin.Size = new System.Drawing.Size(300, 23);
+            this.btnLogin.TabIndex = 32;
+            this.btnLogin.Text = "LOGIN";
+            this.btnLogin.UseVisualStyleBackColor = false;
+            this.btnLogin.Click += new System.EventHandler(this.BtnLogin_Click);
             // 
             // Settings
             // 
@@ -189,6 +206,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
             this.ClientSize = new System.Drawing.Size(350, 350);
+            this.Controls.Add(this.btnLogin);
             this.Controls.Add(this.txtBxMessage);
             this.Controls.Add(this.btnTestConnection);
             this.Controls.Add(this.chBxActivateExtension);
@@ -226,5 +244,6 @@
         private System.Windows.Forms.CheckBox chBxActivateExtension;
         private System.Windows.Forms.Button btnTestConnection;
         private System.Windows.Forms.TextBox txtBxMessage;
+        private System.Windows.Forms.Button btnLogin;
     }
 }
