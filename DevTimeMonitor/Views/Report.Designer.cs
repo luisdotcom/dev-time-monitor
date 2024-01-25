@@ -103,7 +103,7 @@
             // CharactersByAI
             // 
             this.CharactersByAI.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("CharactersByAI.BackgroundImage")));
-            this.CharactersByAI.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.CharactersByAI.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.CharactersByAI.InitialImage = ((System.Drawing.Image)(resources.GetObject("CharactersByAI.InitialImage")));
             this.CharactersByAI.Location = new System.Drawing.Point(140, 200);
             this.CharactersByAI.Name = "CharactersByAI";
@@ -138,11 +138,11 @@
             this.lblAI.AutoSize = true;
             this.lblAI.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblAI.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.lblAI.Location = new System.Drawing.Point(168, 180);
+            this.lblAI.Location = new System.Drawing.Point(137, 30);
             this.lblAI.Name = "lblAI";
-            this.lblAI.Size = new System.Drawing.Size(27, 17);
+            this.lblAI.Size = new System.Drawing.Size(63, 17);
             this.lblAI.TabIndex = 7;
-            this.lblAI.Text = "AI";
+            this.lblAI.Text = "Copilot";
             // 
             // lblUser
             // 
@@ -431,6 +431,7 @@
             this.gbosCodeStatics.Controls.Add(this.lblUserPercent);
             this.gbosCodeStatics.Controls.Add(this.lblAIPercent);
             this.gbosCodeStatics.Controls.Add(this.lblUserNumber);
+            this.gbosCodeStatics.Controls.Add(this.lblAI);
             this.gbosCodeStatics.Controls.Add(this.lblAINumber);
             this.gbosCodeStatics.Controls.Add(this.lblTotalNumber);
             this.gbosCodeStatics.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -451,7 +452,6 @@
             this.Controls.Add(this.button1);
             this.Controls.Add(this.lblDate);
             this.Controls.Add(this.lblUser);
-            this.Controls.Add(this.lblAI);
             this.Controls.Add(this.lblTotal);
             this.Controls.Add(this.CharactersByUser);
             this.Controls.Add(this.CharactersByAI);

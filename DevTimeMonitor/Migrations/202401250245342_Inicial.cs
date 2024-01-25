@@ -58,7 +58,8 @@
                         ProjectName = c.String(nullable: false),
                         FileName = c.String(nullable: false),
                         CharactersTracked = c.Int(nullable: false),
-                        KeysPressed = c.Int(nullable: false),
+                        CharactersByCopilot = c.Int(nullable: false),
+                        CreationDate = c.DateTime(nullable: false),
                     })
                 .PrimaryKey(t => t.Id)
                 .ForeignKey("dbo.TbUsers", t => t.UserId, cascadeDelete: true)

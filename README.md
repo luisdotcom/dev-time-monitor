@@ -6,7 +6,7 @@
 
  #### Description 
 
-DevTimeMonitor is an extension for Visual Studio 2022 that counts the characters you enter manually and compares them to the amount of automatically generated code, allowing you to measure the efficiency of using tools like GitHub Copilot and Chat-GPT.
+DevTimeMonitor is an extension for Visual Studio 2022 that allow you to measure the efficiency of using GitHub Copilot tool.
 
  ##### Technologies
 

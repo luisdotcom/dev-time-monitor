@@ -12,7 +12,8 @@ namespace DevTimeMonitor.Entities.Configurations
             Property(e => e.ProjectName).IsRequired();
             Property(e => e.FileName).IsRequired();
             Property(e => e.CharactersTracked).IsRequired();
-            Property(e => e.KeysPressed).IsRequired();
+            Property(e => e.CharactersByCopilot).IsRequired();
+            Property(e => e.CreationDate).IsRequired();
         }
     }
 }

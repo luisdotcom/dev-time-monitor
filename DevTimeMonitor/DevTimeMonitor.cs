@@ -16,7 +16,6 @@ using System.Data.Entity.Migrations;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 
@@ -236,9 +235,10 @@ namespace DevTimeMonitor
                     customPane.Activate();
                     customPane.OutputStringThreadSafe("DevTimeMonitor Initialized");
 
+                    DateTime currentTime = DateTime.Now.Date;
                     using (ApplicationDBContext context = new ApplicationDBContext())
                     {
-                        Instance.trackers = context.Trackers.Where(t => t.UserId == Instance.user.Id).ToList();
+                        Instance.trackers = context.Trackers.Where(t => t.UserId == Instance.user.Id && t.CreationDate >= currentTime).ToList() ?? new List<TbTracker>();
                         TbDailyLog dailyLog = context.DailyLogs.Where(d => d.UserId == Instance.user.Id).FirstOrDefault() ?? new TbDailyLog()
                         {
                             UserId = Instance.user.Id
@@ -432,21 +432,22 @@ namespace DevTimeMonitor
                                 outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
                                 customPane.OutputStringThreadSafe($"\nFile: {fileName} opened.");
 
-                                DateTime currentTime = DateTime.Now;
+                                DateTime currentTime = DateTime.Now.Date;
                                 using (ApplicationDBContext context = new ApplicationDBContext())
                                 {
-                                    TbTracker tracker = context.Trackers.Where(t => t.UserId == user.Id && t.ProjectName == projectName && t.FileName == fileName).FirstOrDefault() ?? new TbTracker()
+                                    TbTracker tracker = context.Trackers.Where(t => t.UserId == user.Id && t.ProjectName == projectName && t.FileName == fileName && t.CreationDate >= currentTime).FirstOrDefault() ?? new TbTracker()
                                     {
                                         Id = Instance.trackers.Count,
                                         Path = filePath,
                                         ProjectName = projectName,
                                         FileName = fileName,
                                         CharactersTracked = 0,
-                                        KeysPressed = 0,
-                                        UserId = user.Id
+                                        CharactersByCopilot = 0,
+                                        UserId = user.Id,
+                                        CreationDate = DateTime.Now
                                     };
 
-                                    if (Instance.trackers.Find(t => t.UserId == user.Id && t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName) == null)
+                                    if (Instance.trackers.Find(t => t.UserId == user.Id && t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName && t.CreationDate >= currentTime) == null)
                                     {
                                         Instance.trackers.Add(tracker);
                                         context.Trackers.Add(tracker);
@@ -500,11 +501,11 @@ namespace DevTimeMonitor
                             if (fileContent != "")
                             {
                                 int characters = fileContent.Length;
-                                DateTime currentTime = DateTime.Now;
+                                DateTime currentTime = DateTime.Now.Date;
 
                                 using (ApplicationDBContext context = new ApplicationDBContext())
                                 {
-                                    if (context.Trackers.Where(t => t.UserId == user.Id && t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName).Any())
+                                    if (context.Trackers.Where(t => t.UserId == user.Id && t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName && t.CreationDate >= currentTime).Any())
                                     {
                                         context.Entry(tracker).State = EntityState.Modified;
                                     }
@@ -557,8 +558,7 @@ namespace DevTimeMonitor
                 textManager.GetActiveView(1, null, out textView);
                 textView.GetCaretPos(out _afterRow, out _afterPosition);
 
-                string text;
-                textView.GetTextStream(_beforeRow, _beforePosition, _afterRow, _afterPosition, out text);
+                textView.GetTextStream(_beforeRow, _beforePosition, _afterRow, _afterPosition, out string text);
                 int count = text.Count(c => !char.IsWhiteSpace(c));
                 if (count > 0)
                 {
@@ -572,6 +572,7 @@ namespace DevTimeMonitor
                         });
                         if (tracker != null)
                         {
+                            tracker.CharactersByCopilot += count;
                             tracker.CharactersTracked += count;
                             outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
                             customPane.OutputStringThreadSafe($"\nAccepted completion of length {count}");
@@ -603,7 +604,6 @@ namespace DevTimeMonitor
                             if ((modifiedText.Length == 1 || modifiedText == "\r\n" || modifiedText == "\r" || modifiedText == "\n") && IsAValidCharacter(modifiedText))
                             {
                                 tracker.CharactersTracked++;
-                                tracker.KeysPressed++;
 
                                 outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
                                 customPane.OutputStringThreadSafe($"\nCharacter entered by the user in {tracker.FileName}");

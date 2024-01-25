@@ -58,9 +58,9 @@
     <Compile Include="Entities\TbError.cs" />
     <Compile Include="Entities\TbTracker.cs" />
     <Compile Include="Entities\TbUser.cs" />
-    <Compile Include="Migrations\202310271924305_Inicial.cs" />
-    <Compile Include="Migrations\202310271924305_Inicial.designer.cs">
-      <DependentUpon>202310271924305_Inicial.cs</DependentUpon>
+    <Compile Include="Migrations\202401250245342_Inicial.cs" />
+    <Compile Include="Migrations\202401250245342_Inicial.designer.cs">
+      <DependentUpon>202401250245342_Inicial.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Options\SettingsPage.cs" />
@@ -120,12 +120,15 @@
     <PackageReference Include="EntityFramework">
       <Version>6.4.4</Version>
     </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.7.37357" ExcludeAssets="runtime">
+    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.8.37222" ExcludeAssets="runtime">
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.7.2196" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.8.2365">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="System.Configuration.ConfigurationManager">
-      <Version>7.0.0</Version>
+      <Version>8.0.0</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
@@ -141,6 +144,7 @@
     <Content Include="Resources\ai.png" />
     <Content Include="Resources\close.png" />
     <Content Include="Resources\code.png" />
+    <Content Include="Resources\Copilot.png" />
     <Content Include="Resources\MSSQL.png" />
     <Content Include="Resources\user-settings.png" />
     <None Include="Resources\gear.png" />
@@ -153,8 +157,8 @@
     <Content Include="Resources\stop.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\202310271924305_Inicial.resx">
-      <DependentUpon>202310271924305_Inicial.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\202401250245342_Inicial.resx">
+      <DependentUpon>202401250245342_Inicial.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

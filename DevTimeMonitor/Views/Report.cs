@@ -30,34 +30,39 @@ namespace DevTimeMonitor.Views
         {
             using (ApplicationDBContext context = new ApplicationDBContext())
             {
-                List<TbTracker> data = context.Trackers.Where(t => t.UserId == user.Id).ToList();
+                DateTime today = DateTime.Now;
+                DateTime mondayOfCurrentWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
+
+                List<TbTracker> data = context.Trackers.Where(t => t.UserId == user.Id && t.CreationDate >= mondayOfCurrentWeek).ToList();
                 if (data.Count > 0)
                 {
                     int totalCharacters = 0;
+                    int totalCharactersByCopilot = 0;
                     int totalCharactersByUser = 0;
-                    int totalCharactersByAI = 0;
 
                     for (int i = 0; i < data.Count; i++)
                     {
                         totalCharacters += data[i].CharactersTracked;
-                        totalCharactersByUser += data[i].KeysPressed;
+                        totalCharactersByCopilot += data[i].CharactersByCopilot;
                     }
 
-                    totalCharactersByAI += totalCharacters - totalCharactersByUser;
+                    totalCharactersByUser += totalCharacters - totalCharactersByCopilot;
 
+                    double totalCharactersByCopilotPercent = 0.0;
                     double totalCharactersByUserPercent = 0.0;
-                    double totalCharactersByAIPercent = 0.0;
+
                     if (totalCharacters > 0)
                     {
+                        totalCharactersByCopilotPercent = (double)totalCharactersByCopilot / totalCharacters;
                         totalCharactersByUserPercent = (double)totalCharactersByUser / totalCharacters;
-                        totalCharactersByAIPercent = (double)totalCharactersByAI / totalCharacters;
+
                     }
 
                     lblTotalNumber.Text = totalCharacters.ToString();
                     lblUserNumber.Text = totalCharactersByUser.ToString();
-                    lblAINumber.Text = totalCharactersByAI.ToString();
+                    lblAINumber.Text = totalCharactersByCopilot.ToString();
                     lblUserPercent.Text = (totalCharactersByUserPercent * 100).ToString("0.00") + "%";
-                    lblAIPercent.Text = (totalCharactersByAIPercent * 100).ToString("0.00") + "%";
+                    lblAIPercent.Text = (totalCharactersByCopilotPercent * 100).ToString("0.00") + "%";
                     lblDate.Text = DateTime.Now.ToString("dd/MM/yyyy hh:mm");
                 }
             }
