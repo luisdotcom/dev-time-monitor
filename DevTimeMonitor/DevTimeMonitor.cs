@@ -2,8 +2,10 @@
 using DevTimeMonitor.Views;
 using EnvDTE;
 using EnvDTE80;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Threading;
 using System;
 using System.Collections.Generic;
@@ -16,6 +18,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+
 
 namespace DevTimeMonitor
 {
@@ -33,6 +36,9 @@ namespace DevTimeMonitor
         private static readonly string outputTitle = "DevTimeMonitor";
         private static IVsOutputWindow outputWindow;
         private static TextEditorEvents textEditorEvents;
+        private static CommandEvents commandEvents;
+        private static IVsTextManager textManager = Package.GetGlobalService(typeof(SVsTextManager)) as IVsTextManager;
+        private static IVsTextView textView;
 
         private List<TbTracker> trackers;
         private TbUser user;
@@ -40,6 +46,8 @@ namespace DevTimeMonitor
         private SettingsPage options;
 
         private static HashSet<string> FileTypes;
+
+        private static int _beforeRow, _beforePosition, _afterRow, _afterPosition;
 
         private DevTimeMonitor(AsyncPackage package)
         {
@@ -325,7 +333,12 @@ namespace DevTimeMonitor
                         textEditorEvents.LineChanged -= OnLineChanged;
                         textEditorEvents = null;
                     }
-
+                    if (commandEvents != null)
+                    {
+                        commandEvents.AfterExecute -= CommandEvents_AfterExecute;
+                        commandEvents.BeforeExecute -= CommandEvents_BeforeExecute;
+                        commandEvents = null;
+                    }
                     if (await Instance.package.GetServiceAsync(typeof(DTE)) is DTE2 dte)
                     {
                         dte.Events.WindowEvents.WindowCreated -= Instance.OnWindowCreated;
@@ -403,6 +416,13 @@ namespace DevTimeMonitor
                                 textEditorEvents = ((Events2)window.DTE.Events).TextEditorEvents;
                                 textEditorEvents.LineChanged += OnLineChanged;
                             }
+                            if (commandEvents == null)
+                            {
+                                commandEvents = ((Events2)window.DTE.Events).CommandEvents;
+                                commandEvents.AfterExecute += CommandEvents_AfterExecute;
+                                commandEvents.BeforeExecute += CommandEvents_BeforeExecute;
+                            }
+
                             string filePath = document.FullName;
                             string projectName = window.Project.Name;
                             string fileName = filePath.Split('\\').Last();
@@ -518,6 +538,49 @@ namespace DevTimeMonitor
                 }
             }
         }
+
+        private static void CommandEvents_BeforeExecute(string guid, int id, object customIn, object customOut, ref bool cancel)
+        {
+            if (id == (int)VSConstants.VSStd2KCmdID.TAB)
+            {
+                // Get the current cursor position
+                textManager.GetActiveView(1, null, out textView);
+                textView.GetCaretPos(out _beforeRow, out _beforePosition);
+            }
+        }
+        private static async void CommandEvents_AfterExecute(string guid, int id, object customIn, object customOut)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            if (id == (int)VSConstants.VSStd2KCmdID.TAB)
+            {
+                // Get the current cursor position after the TAB
+                textManager.GetActiveView(1, null, out textView);
+                textView.GetCaretPos(out _afterRow, out _afterPosition);
+
+                string text;
+                textView.GetTextStream(_beforeRow, _beforePosition, _afterRow, _afterPosition, out text);
+                int count = text.Count(c => !char.IsWhiteSpace(c));
+                if (count > 0)
+                {
+                    if (await Instance.package.GetServiceAsync(typeof(DTE)) is DTE2 dte)
+                    {
+                        Window activeWindow = dte.ActiveWindow;
+                        TbTracker tracker = Instance.trackers.Find(t =>
+                        {
+                            ThreadHelper.ThrowIfNotOnUIThread();
+                            return t.FileName == activeWindow.Document.Name && t.Path == activeWindow.Document.FullName;
+                        });
+                        if (tracker != null)
+                        {
+                            tracker.CharactersTracked += count;
+                            outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
+                            customPane.OutputStringThreadSafe($"\nAccepted completion of length {count}");
+                        }
+                    }
+                }
+            }
+        }
+
         private static async void OnLineChanged(TextPoint startPoint, TextPoint endPoint, int hint)
         {
             if (Instance.logged)
@@ -544,16 +607,6 @@ namespace DevTimeMonitor
 
                                 outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
                                 customPane.OutputStringThreadSafe($"\nCharacter entered by the user in {tracker.FileName}");
-                            }
-                            else
-                            {
-                                if (modifiedText.Trim() != "" && modifiedText != "\r\n" && modifiedText != "\r" && modifiedText != "\n")
-                                {
-                                    outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
-                                    customPane.OutputStringThreadSafe($"\nAutomatically generated characters in {tracker.FileName}");
-
-                                    tracker.CharactersTracked += modifiedText.Length;
-                                }
                             }
                         }
                     }
