@@ -12,13 +12,20 @@ namespace DevTimeMonitor.Views
         public Report()
         {
             InitializeComponent();
-            using (ApplicationDBContext context = new ApplicationDBContext())
+            try
             {
-                SettingsPage settingsPage = SettingsPage.GetLiveInstanceAsync().GetAwaiter().GetResult();
-                user = context.Users.Where(u => u.UserName == settingsPage.UserName).FirstOrDefault();
+                using (ApplicationDBContext context = new ApplicationDBContext())
+                {
+                    SettingsPage settingsPage = SettingsPage.GetLiveInstanceAsync().GetAwaiter().GetResult();
+                    user = context.Users.Where(u => u.UserName == settingsPage.UserName).FirstOrDefault();
+                }
+                SetTotals();
+                SetDays();
             }
-            SetTotals();
-            SetDays();
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error");
+            }
         }
 
         private void BtnClose_Click(object sender, EventArgs e)
@@ -28,61 +35,77 @@ namespace DevTimeMonitor.Views
 
         private void SetTotals()
         {
-            using (ApplicationDBContext context = new ApplicationDBContext())
+            try
             {
-                DateTime today = DateTime.Now;
-                DateTime mondayOfCurrentWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
-
-                List<TbTracker> data = context.Trackers.Where(t => t.UserId == user.Id && t.CreationDate >= mondayOfCurrentWeek).ToList();
-                if (data.Count > 0)
+                using (ApplicationDBContext context = new ApplicationDBContext())
                 {
-                    int totalCharacters = 0;
-                    int totalCharactersByCopilot = 0;
-                    int totalCharactersByUser = 0;
+                    DateTime today = DateTime.Now;
+                    DateTime mondayOfCurrentWeek = today.Date.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday); 
 
-                    for (int i = 0; i < data.Count; i++)
+                    List<TbTracker> data = context.Trackers.Where(t => t.UserId == user.Id && t.CreationDate >= mondayOfCurrentWeek).ToList();
+                    if (data.Count > 0)
                     {
-                        totalCharacters += data[i].CharactersTracked;
-                        totalCharactersByCopilot += data[i].CharactersByCopilot;
+                        int totalCharacters = 0;
+                        int totalCharactersByCopilot = 0;
+                        int totalCharactersByUser = 0;
+
+                        for (int i = 0; i < data.Count; i++)
+                        {
+                            totalCharacters += data[i].CharactersTracked;
+                            totalCharactersByCopilot += data[i].CharactersByCopilot;
+                        }
+
+                        totalCharactersByUser += totalCharacters - totalCharactersByCopilot;
+
+                        double totalCharactersByCopilotPercent = 0.0;
+                        double totalCharactersByUserPercent = 0.0;
+
+                        if (totalCharacters > 0)
+                        {
+                            totalCharactersByCopilotPercent = (double)totalCharactersByCopilot / totalCharacters;
+                            totalCharactersByUserPercent = (double)totalCharactersByUser / totalCharacters;
+
+                        }
+
+                        lblTotalNumber.Text = totalCharacters.ToString();
+                        lblUserNumber.Text = totalCharactersByUser.ToString();
+                        lblAINumber.Text = totalCharactersByCopilot.ToString();
+                        lblUserPercent.Text = (totalCharactersByUserPercent * 100).ToString("0.00") + "%";
+                        lblAIPercent.Text = (totalCharactersByCopilotPercent * 100).ToString("0.00") + "%";
+                        lblDate.Text = DateTime.Now.ToString("dd/MM/yyyy hh:mm");
                     }
-
-                    totalCharactersByUser += totalCharacters - totalCharactersByCopilot;
-
-                    double totalCharactersByCopilotPercent = 0.0;
-                    double totalCharactersByUserPercent = 0.0;
-
-                    if (totalCharacters > 0)
-                    {
-                        totalCharactersByCopilotPercent = (double)totalCharactersByCopilot / totalCharacters;
-                        totalCharactersByUserPercent = (double)totalCharactersByUser / totalCharacters;
-
-                    }
-
-                    lblTotalNumber.Text = totalCharacters.ToString();
-                    lblUserNumber.Text = totalCharactersByUser.ToString();
-                    lblAINumber.Text = totalCharactersByCopilot.ToString();
-                    lblUserPercent.Text = (totalCharactersByUserPercent * 100).ToString("0.00") + "%";
-                    lblAIPercent.Text = (totalCharactersByCopilotPercent * 100).ToString("0.00") + "%";
-                    lblDate.Text = DateTime.Now.ToString("dd/MM/yyyy hh:mm");
                 }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error");
+            }
+
         }
         private void SetDays()
         {
-            using (ApplicationDBContext context = new ApplicationDBContext())
+            try
             {
-                TbDailyLog dailyLog = context.DailyLogs.Where(d => d.UserId == user.Id).FirstOrDefault();
-                if (dailyLog != null)
+                using (ApplicationDBContext context = new ApplicationDBContext())
                 {
-                    chBxMonday.Checked = dailyLog.Monday;
-                    chBxTuesday.Checked = dailyLog.Tuesday;
-                    chBxWednesday.Checked = dailyLog.Wednesday;
-                    chBxThursday.Checked = dailyLog.Thursday;
-                    chBxFriday.Checked = dailyLog.Friday;
-                    chBxSaturday.Checked = dailyLog.Saturday;
-                    chBxSunday.Checked = dailyLog.Sunday;
+                    TbDailyLog dailyLog = context.DailyLogs.Where(d => d.UserId == user.Id).FirstOrDefault();
+                    if (dailyLog != null)
+                    {
+                        chBxMonday.Checked = dailyLog.Monday;
+                        chBxTuesday.Checked = dailyLog.Tuesday;
+                        chBxWednesday.Checked = dailyLog.Wednesday;
+                        chBxThursday.Checked = dailyLog.Thursday;
+                        chBxFriday.Checked = dailyLog.Friday;
+                        chBxSaturday.Checked = dailyLog.Saturday;
+                        chBxSunday.Checked = dailyLog.Sunday;
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error");
+            }
+
         }
     }
 }
