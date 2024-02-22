@@ -82,7 +82,8 @@ namespace DevTimeMonitor
                 "xaml",
                 "razor",
                 "txt",
-                "tt"
+                "tt",
+                "cshtml"
             };
         }
         public static DevTimeMonitor Instance { get; private set; }
