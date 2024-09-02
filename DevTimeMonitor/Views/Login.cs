@@ -9,11 +9,17 @@ namespace DevTimeMonitor.Views
     {
         private bool signUp = false;
         private SettingsPage settingsPage;
+
         public Login()
         {
             InitializeComponent();
-            settingsPage = SettingsPage.GetLiveInstanceAsync().GetAwaiter().GetResult();
         }
+
+        private async void Login_LoadAsync(object sender, EventArgs e)
+        {
+            settingsPage = await SettingsPage.GetLiveInstanceAsync();
+        }
+
         private void BtnClose_Click(object sender, EventArgs e)
         {
             Close();
@@ -66,7 +72,7 @@ namespace DevTimeMonitor.Views
                 {
                     try
                     {
-                        using (var context = new ApplicationDBContext())
+                        using (ApplicationDBContext context = new ApplicationDBContext())
                         {
                             if (context.Users.Where(u => u.UserName == txtBxUserName.Text).Any())
                             {
@@ -116,7 +122,7 @@ namespace DevTimeMonitor.Views
                 {
                     try
                     {
-                        using (var context = new ApplicationDBContext())
+                        using (ApplicationDBContext context = new ApplicationDBContext())
                         {
                             TbUser user = context.Users.Where(u => u.UserName == txtBxUserName.Text && u.Password == txtBxPassword.Text).FirstOrDefault();
                             if (user != null)

@@ -16,7 +16,6 @@ namespace DevTimeMonitor
             SettingsPage settingsPage = SettingsPage.GetLiveInstanceAsync().GetAwaiter().GetResult();
             Database.Connection.ConnectionString = settingsPage.ConnectionString;
         }
-
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

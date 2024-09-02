@@ -229,6 +229,7 @@
             this.Name = "Login";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "DevTimeMonitor";
+            this.Load += new System.EventHandler(this.Login_LoadAsync);
             ((System.ComponentModel.ISupportInitialize)(this.lblTitle)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -17,8 +17,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-
 
 namespace DevTimeMonitor
 {
@@ -114,22 +112,22 @@ namespace DevTimeMonitor
                     outputWindow = (IVsOutputWindow)Package.GetGlobalService(typeof(SVsOutputWindow));
                     outputWindow.CreatePane(ref outputGuid, outputTitle, 1, 1);
 
-                    await ValidateConfiguration(package);
+                    await ValidateConfigurationAsync(package);
                 }
             }
             catch (Exception ex)
             {
-                await PrintMessage(ex.Message);
+                await PrintMessageAsync(ex.Message);
             }
         }
-        private static async Task ValidateConfiguration(AsyncPackage package)
+        private static async Task ValidateConfigurationAsync(AsyncPackage package)
         {
             try
             {
                 Instance.options = await SettingsPage.GetLiveInstanceAsync();
                 string message = "";
 
-                if (await IsDatabaseConnected())
+                if (await VerifyDatabaseConnectionAsync())
                 {
                     Instance.logged = false;
 
@@ -195,15 +193,15 @@ namespace DevTimeMonitor
 
                 if (message != "")
                 {
-                    await PrintMessage(message);
+                    await PrintMessageAsync(message);
                 }
             }
             catch (Exception ex)
             {
-                await PrintMessage(ex.Message);
+                await PrintMessageAsync(ex.Message);
             }
         }
-        private static async Task<bool> IsDatabaseConnected()
+        private static async Task<bool> VerifyDatabaseConnectionAsync()
         {
             try
             {
@@ -215,22 +213,23 @@ namespace DevTimeMonitor
             }
             catch (Exception ex)
             {
-                await PrintMessage(ex.Message);
+                await PrintMessageAsync(ex.Message);
                 return false;
             }
         }
-        private static async Task PrintMessage(string message)
+        private static async Task PrintMessageAsync(string message)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(Instance.package.DisposalToken);
 
             outputWindow.GetPane(ref outputGuid, out IVsOutputWindowPane customPane);
             customPane.Activate();
             customPane.OutputStringThreadSafe("\n" + message);
-        } 
+        }
 
         #region TRACKER
         private static async void TrackFiles(object sender, EventArgs e)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             if (Instance.logged)
             {
                 try
@@ -253,7 +252,7 @@ namespace DevTimeMonitor
                         dte.Events.WindowEvents.WindowClosing += Instance.OnWindowClosing;
                     }
 
-                    await PrintMessage("DevTimeMonitor Initialized");
+                    await PrintMessageAsync("DevTimeMonitor Initialized");
 
                     DateTime currentTime = DateTime.Now.Date;
                     using (ApplicationDBContext context = new ApplicationDBContext())
@@ -325,7 +324,7 @@ namespace DevTimeMonitor
                         await context.SaveChangesAsync();
                     }
 
-                    await PrintMessage($"Current states saved: {Instance.trackers.Count}");
+                    await PrintMessageAsync($"Current states saved: {Instance.trackers.Count}");
 
                     if (await Instance.package.GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
                     {
@@ -338,7 +337,7 @@ namespace DevTimeMonitor
                 }
                 catch (Exception ex)
                 {
-                    await PrintMessage(ex.Message);
+                    await PrintMessageAsync(ex.Message);
                     StopTrackingFiles(null, null);
                 }
             }
@@ -368,7 +367,7 @@ namespace DevTimeMonitor
                         dte.Events.WindowEvents.WindowClosing -= Instance.OnWindowClosing;
                     }
 
-                    await PrintMessage("DevTimeMonitor Stopped");
+                    await PrintMessageAsync("DevTimeMonitor Stopped");
 
                     if (await Instance.package.GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
                     {
@@ -381,7 +380,7 @@ namespace DevTimeMonitor
                 }
                 catch (Exception ex)
                 {
-                    await PrintMessage(ex.Message);
+                    await PrintMessageAsync(ex.Message);
                 }
             }
         }
@@ -396,7 +395,7 @@ namespace DevTimeMonitor
             }
             catch (Exception ex)
             {
-                await PrintMessage(ex.Message);
+                await PrintMessageAsync(ex.Message);
                 StopTrackingFiles(null, null);
                 return "error";
             }
@@ -431,7 +430,7 @@ namespace DevTimeMonitor
                             string fileContent = await ReadFileContentAsync(filePath);
                             if (fileContent != "error")
                             {
-                                await PrintMessage($"File: {fileName} opened.");
+                                await PrintMessageAsync($"File: {fileName} opened.");
 
                                 DateTime currentTime = DateTime.Now.Date;
                                 using (ApplicationDBContext context = new ApplicationDBContext())
@@ -459,7 +458,7 @@ namespace DevTimeMonitor
                                         trackers.Add(tracker);
                                     }
                                     await context.SaveChangesAsync();
-                                    await PrintMessage($"Tracking File: {fileName}.");
+                                    await PrintMessageAsync($"Tracking File: {fileName}.");
                                 }
                             }
                         }
@@ -467,7 +466,7 @@ namespace DevTimeMonitor
                 }
                 catch (IOException ex)
                 {
-                    await PrintMessage(ex.Message);
+                    await PrintMessageAsync(ex.Message);
                     StopTrackingFiles(null, null);
                 }
             }
@@ -511,13 +510,13 @@ namespace DevTimeMonitor
                                 }
                             }
 
-                            await PrintMessage($"File: {tracker.FileName} closed.");
+                            await PrintMessageAsync($"File: {tracker.FileName} closed.");
                         }
                     }
                 }
                 catch (IOException ex)
                 {
-                    await PrintMessage(ex.Message);
+                    await PrintMessageAsync(ex.Message);
                     StopTrackingFiles(null, null);
                 }
             }
@@ -527,7 +526,6 @@ namespace DevTimeMonitor
         {
             if (id == (int)VSConstants.VSStd2KCmdID.TAB)
             {
-                // Get the current cursor position
                 textManager.GetActiveView(1, null, out textView);
                 textView.GetCaretPos(out _beforeRow, out _beforePosition);
             }
@@ -537,7 +535,6 @@ namespace DevTimeMonitor
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             if (id == (int)VSConstants.VSStd2KCmdID.TAB)
             {
-                // Get the current cursor position after the TAB
                 textManager.GetActiveView(1, null, out textView);
                 textView.GetCaretPos(out _afterRow, out _afterPosition);
 
@@ -558,7 +555,7 @@ namespace DevTimeMonitor
                             tracker.CharactersByCopilot += count;
                             tracker.CharactersTracked += count;
 
-                            await PrintMessage($"Accepted completion of length {count}");
+                            await PrintMessageAsync($"Accepted completion of length {count}");
                         }
                     }
                 }
@@ -573,7 +570,7 @@ namespace DevTimeMonitor
                 {
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                    if (startPoint.Parent != null & startPoint.Parent.Parent != null)
+                    if (startPoint.Parent != null && startPoint.Parent.Parent != null && startPoint.Parent.Parent.ActiveWindow != null)
                     {
                         TbTracker tracker = Instance.trackers.Find(t =>
                         {
@@ -588,14 +585,14 @@ namespace DevTimeMonitor
                             {
                                 tracker.CharactersTracked++;
 
-                                await PrintMessage($"Character entered by the user in {tracker.FileName}");
+                                await PrintMessageAsync($"Character entered by the user in {tracker.FileName}");
                             }
                         }
                     }
                 }
                 catch (IOException ex)
                 {
-                    await PrintMessage(ex.Message);
+                    await PrintMessageAsync(ex.Message);
                     StopTrackingFiles(null, null);
                 }
             }

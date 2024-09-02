@@ -40,7 +40,7 @@ namespace DevTimeMonitor.Views
                 using (ApplicationDBContext context = new ApplicationDBContext())
                 {
                     DateTime today = DateTime.Now;
-                    DateTime mondayOfCurrentWeek = today.Date.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday); 
+                    DateTime mondayOfCurrentWeek = today.Date.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
 
                     List<TbTracker> data = context.Trackers.Where(t => t.UserId == user.Id && t.CreationDate >= mondayOfCurrentWeek).ToList();
                     if (data.Count > 0)
@@ -105,7 +105,6 @@ namespace DevTimeMonitor.Views
             {
                 MessageBox.Show(ex.Message, "Error");
             }
-
-        }
+        } 
     }
 }
