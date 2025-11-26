@@ -82,7 +82,9 @@
             // Title
             // 
             this.Title.AutoSize = true;
+            this.Title.BackColor = System.Drawing.Color.Transparent;
             this.Title.Font = new System.Drawing.Font("Verdana", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Title.ForeColor = System.Drawing.Color.WhiteSmoke;
             this.Title.Location = new System.Drawing.Point(106, 85);
             this.Title.Name = "Title";
             this.Title.Size = new System.Drawing.Size(152, 18);
@@ -92,8 +94,8 @@
             // TotalCharacters
             // 
             this.TotalCharacters.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("TotalCharacters.BackgroundImage")));
-            this.TotalCharacters.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.TotalCharacters.InitialImage = null;
+            this.TotalCharacters.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.TotalCharacters.InitialImage = ((System.Drawing.Image)(resources.GetObject("TotalCharacters.InitialImage")));
             this.TotalCharacters.Location = new System.Drawing.Point(20, 200);
             this.TotalCharacters.Name = "TotalCharacters";
             this.TotalCharacters.Size = new System.Drawing.Size(78, 70);
@@ -114,7 +116,7 @@
             // CharactersByUser
             // 
             this.CharactersByUser.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("CharactersByUser.BackgroundImage")));
-            this.CharactersByUser.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.CharactersByUser.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.CharactersByUser.InitialImage = ((System.Drawing.Image)(resources.GetObject("CharactersByUser.InitialImage")));
             this.CharactersByUser.Location = new System.Drawing.Point(252, 200);
             this.CharactersByUser.Name = "CharactersByUser";
@@ -126,7 +128,7 @@
             // 
             this.lblTotal.AutoSize = true;
             this.lblTotal.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTotal.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblTotal.ForeColor = System.Drawing.Color.SlateGray;
             this.lblTotal.Location = new System.Drawing.Point(36, 180);
             this.lblTotal.Name = "lblTotal";
             this.lblTotal.Size = new System.Drawing.Size(47, 17);
@@ -137,7 +139,7 @@
             // 
             this.lblAI.AutoSize = true;
             this.lblAI.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblAI.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblAI.ForeColor = System.Drawing.Color.SlateGray;
             this.lblAI.Location = new System.Drawing.Point(137, 30);
             this.lblAI.Name = "lblAI";
             this.lblAI.Size = new System.Drawing.Size(63, 17);
@@ -148,7 +150,7 @@
             // 
             this.lblUser.AutoSize = true;
             this.lblUser.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblUser.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblUser.ForeColor = System.Drawing.Color.SlateGray;
             this.lblUser.Location = new System.Drawing.Point(272, 180);
             this.lblUser.Name = "lblUser";
             this.lblUser.Size = new System.Drawing.Size(43, 17);
@@ -158,7 +160,7 @@
             // lblDate
             // 
             this.lblDate.AutoSize = true;
-            this.lblDate.BackColor = System.Drawing.SystemColors.Window;
+            this.lblDate.BackColor = System.Drawing.Color.Transparent;
             this.lblDate.Font = new System.Drawing.Font("Verdana", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblDate.ForeColor = System.Drawing.Color.SlateGray;
             this.lblDate.Location = new System.Drawing.Point(116, 108);
@@ -169,13 +171,13 @@
             // 
             // button1
             // 
-            this.button1.BackColor = System.Drawing.SystemColors.Window;
+            this.button1.BackColor = System.Drawing.Color.Transparent;
             this.button1.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("button1.BackgroundImage")));
             this.button1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.button1.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.button1.FlatAppearance.BorderColor = System.Drawing.SystemColors.Window;
-            this.button1.FlatAppearance.MouseDownBackColor = System.Drawing.SystemColors.Window;
-            this.button1.FlatAppearance.MouseOverBackColor = System.Drawing.SystemColors.Window;
+            this.button1.FlatAppearance.BorderColor = System.Drawing.Color.Black;
+            this.button1.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Black;
+            this.button1.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Black;
             this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.button1.Location = new System.Drawing.Point(321, 0);
             this.button1.Name = "button1";
@@ -211,7 +213,7 @@
             this.groupBox1.Controls.Add(this.lblMonday);
             this.groupBox1.Controls.Add(this.chBxMonday);
             this.groupBox1.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox1.ForeColor = System.Drawing.Color.DimGray;
+            this.groupBox1.ForeColor = System.Drawing.Color.SlateGray;
             this.groupBox1.Location = new System.Drawing.Point(12, 332);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(326, 69);
@@ -233,7 +235,7 @@
             // 
             this.lblSunday.AutoSize = true;
             this.lblSunday.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSunday.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblSunday.ForeColor = System.Drawing.Color.SlateGray;
             this.lblSunday.Location = new System.Drawing.Point(213, 23);
             this.lblSunday.Name = "lblSunday";
             this.lblSunday.Size = new System.Drawing.Size(28, 17);
@@ -254,7 +256,7 @@
             // 
             this.lblSaturday.AutoSize = true;
             this.lblSaturday.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSaturday.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblSaturday.ForeColor = System.Drawing.Color.SlateGray;
             this.lblSaturday.Location = new System.Drawing.Point(180, 23);
             this.lblSaturday.Name = "lblSaturday";
             this.lblSaturday.Size = new System.Drawing.Size(27, 17);
@@ -305,7 +307,7 @@
             // 
             this.lblFriday.AutoSize = true;
             this.lblFriday.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblFriday.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblFriday.ForeColor = System.Drawing.Color.SlateGray;
             this.lblFriday.Location = new System.Drawing.Point(150, 23);
             this.lblFriday.Name = "lblFriday";
             this.lblFriday.Size = new System.Drawing.Size(24, 17);
@@ -316,7 +318,7 @@
             // 
             this.lblThursday.AutoSize = true;
             this.lblThursday.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblThursday.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblThursday.ForeColor = System.Drawing.Color.SlateGray;
             this.lblThursday.Location = new System.Drawing.Point(116, 23);
             this.lblThursday.Name = "lblThursday";
             this.lblThursday.Size = new System.Drawing.Size(28, 17);
@@ -327,7 +329,7 @@
             // 
             this.lblWednesday.AutoSize = true;
             this.lblWednesday.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblWednesday.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblWednesday.ForeColor = System.Drawing.Color.SlateGray;
             this.lblWednesday.Location = new System.Drawing.Point(77, 23);
             this.lblWednesday.Name = "lblWednesday";
             this.lblWednesday.Size = new System.Drawing.Size(33, 17);
@@ -338,7 +340,7 @@
             // 
             this.lblTuesday.AutoSize = true;
             this.lblTuesday.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTuesday.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblTuesday.ForeColor = System.Drawing.Color.SlateGray;
             this.lblTuesday.Location = new System.Drawing.Point(43, 23);
             this.lblTuesday.Name = "lblTuesday";
             this.lblTuesday.Size = new System.Drawing.Size(28, 17);
@@ -349,7 +351,7 @@
             // 
             this.lblMonday.AutoSize = true;
             this.lblMonday.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblMonday.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblMonday.ForeColor = System.Drawing.Color.SlateGray;
             this.lblMonday.Location = new System.Drawing.Point(6, 23);
             this.lblMonday.Name = "lblMonday";
             this.lblMonday.Size = new System.Drawing.Size(31, 17);
@@ -360,7 +362,7 @@
             // 
             this.lblTotalNumber.AutoSize = true;
             this.lblTotalNumber.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTotalNumber.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblTotalNumber.ForeColor = System.Drawing.Color.SlateBlue;
             this.lblTotalNumber.Location = new System.Drawing.Point(6, 122);
             this.lblTotalNumber.Margin = new System.Windows.Forms.Padding(0);
             this.lblTotalNumber.MinimumSize = new System.Drawing.Size(80, 0);
@@ -374,7 +376,7 @@
             // 
             this.lblAINumber.AutoSize = true;
             this.lblAINumber.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblAINumber.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblAINumber.ForeColor = System.Drawing.Color.SlateBlue;
             this.lblAINumber.Location = new System.Drawing.Point(126, 122);
             this.lblAINumber.Margin = new System.Windows.Forms.Padding(0);
             this.lblAINumber.MinimumSize = new System.Drawing.Size(80, 0);
@@ -388,7 +390,7 @@
             // 
             this.lblUserNumber.AutoSize = true;
             this.lblUserNumber.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblUserNumber.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblUserNumber.ForeColor = System.Drawing.Color.SlateBlue;
             this.lblUserNumber.Location = new System.Drawing.Point(239, 122);
             this.lblUserNumber.Margin = new System.Windows.Forms.Padding(0);
             this.lblUserNumber.MinimumSize = new System.Drawing.Size(80, 0);
@@ -402,7 +404,7 @@
             // 
             this.lblAIPercent.AutoSize = true;
             this.lblAIPercent.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblAIPercent.ForeColor = System.Drawing.Color.LightSlateGray;
+            this.lblAIPercent.ForeColor = System.Drawing.Color.SlateGray;
             this.lblAIPercent.Location = new System.Drawing.Point(127, 145);
             this.lblAIPercent.Margin = new System.Windows.Forms.Padding(0);
             this.lblAIPercent.MinimumSize = new System.Drawing.Size(80, 0);
@@ -416,7 +418,7 @@
             // 
             this.lblUserPercent.AutoSize = true;
             this.lblUserPercent.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblUserPercent.ForeColor = System.Drawing.Color.LightSlateGray;
+            this.lblUserPercent.ForeColor = System.Drawing.Color.SlateGray;
             this.lblUserPercent.Location = new System.Drawing.Point(240, 145);
             this.lblUserPercent.Margin = new System.Windows.Forms.Padding(0);
             this.lblUserPercent.MinimumSize = new System.Drawing.Size(80, 0);
@@ -435,7 +437,7 @@
             this.gbosCodeStatics.Controls.Add(this.lblAINumber);
             this.gbosCodeStatics.Controls.Add(this.lblTotalNumber);
             this.gbosCodeStatics.Font = new System.Drawing.Font("Verdana", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.gbosCodeStatics.ForeColor = System.Drawing.Color.DimGray;
+            this.gbosCodeStatics.ForeColor = System.Drawing.Color.SlateGray;
             this.gbosCodeStatics.Location = new System.Drawing.Point(12, 150);
             this.gbosCodeStatics.Name = "gbosCodeStatics";
             this.gbosCodeStatics.Size = new System.Drawing.Size(326, 176);
@@ -447,7 +449,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.SystemColors.Window;
+            this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(350, 435);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.lblDate);

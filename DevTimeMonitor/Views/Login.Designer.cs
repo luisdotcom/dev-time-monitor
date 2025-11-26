@@ -48,7 +48,9 @@
             // Title
             // 
             this.Title.AutoSize = true;
+            this.Title.BackColor = System.Drawing.Color.Transparent;
             this.Title.Font = new System.Drawing.Font("Verdana", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Title.ForeColor = System.Drawing.Color.SlateGray;
             this.Title.Location = new System.Drawing.Point(106, 85);
             this.Title.Name = "Title";
             this.Title.Size = new System.Drawing.Size(152, 18);
@@ -68,13 +70,13 @@
             // 
             // button1
             // 
-            this.button1.BackColor = System.Drawing.SystemColors.Window;
+            this.button1.BackColor = System.Drawing.Color.Transparent;
             this.button1.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("button1.BackgroundImage")));
             this.button1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.button1.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.button1.FlatAppearance.BorderColor = System.Drawing.SystemColors.Window;
-            this.button1.FlatAppearance.MouseDownBackColor = System.Drawing.SystemColors.Window;
-            this.button1.FlatAppearance.MouseOverBackColor = System.Drawing.SystemColors.Window;
+            this.button1.FlatAppearance.BorderColor = System.Drawing.Color.Black;
+            this.button1.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Black;
+            this.button1.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Black;
             this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.button1.Location = new System.Drawing.Point(321, 0);
             this.button1.Name = "button1";
@@ -86,13 +88,13 @@
             // 
             // btnSettings
             // 
-            this.btnSettings.BackColor = System.Drawing.SystemColors.Window;
+            this.btnSettings.BackColor = System.Drawing.Color.Transparent;
             this.btnSettings.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("btnSettings.BackgroundImage")));
             this.btnSettings.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.btnSettings.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnSettings.FlatAppearance.BorderColor = System.Drawing.SystemColors.Window;
-            this.btnSettings.FlatAppearance.MouseDownBackColor = System.Drawing.SystemColors.Window;
-            this.btnSettings.FlatAppearance.MouseOverBackColor = System.Drawing.SystemColors.Window;
+            this.btnSettings.FlatAppearance.BorderColor = System.Drawing.Color.Black;
+            this.btnSettings.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Black;
+            this.btnSettings.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Black;
             this.btnSettings.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSettings.Location = new System.Drawing.Point(321, 402);
             this.btnSettings.Name = "btnSettings";
@@ -123,7 +125,7 @@
             // 
             this.lblTotal.AutoSize = true;
             this.lblTotal.Font = new System.Drawing.Font("Verdana", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTotal.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblTotal.ForeColor = System.Drawing.Color.SlateGray;
             this.lblTotal.Location = new System.Drawing.Point(86, 184);
             this.lblTotal.Name = "lblTotal";
             this.lblTotal.Size = new System.Drawing.Size(73, 13);
@@ -134,7 +136,7 @@
             // 
             this.lblPassword.AutoSize = true;
             this.lblPassword.Font = new System.Drawing.Font("Verdana", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblPassword.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblPassword.ForeColor = System.Drawing.Color.SlateGray;
             this.lblPassword.Location = new System.Drawing.Point(86, 233);
             this.lblPassword.Name = "lblPassword";
             this.lblPassword.Size = new System.Drawing.Size(69, 13);
@@ -143,7 +145,7 @@
             // 
             // btnLogin
             // 
-            this.btnLogin.BackColor = System.Drawing.Color.DarkSlateBlue;
+            this.btnLogin.BackColor = System.Drawing.Color.SlateBlue;
             this.btnLogin.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnLogin.FlatAppearance.BorderSize = 0;
             this.btnLogin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -161,11 +163,11 @@
             // 
             this.lblSignUp.AutoSize = true;
             this.lblSignUp.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.lblSignUp.Font = new System.Drawing.Font("Verdana", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSignUp.ForeColor = System.Drawing.Color.DarkSlateBlue;
-            this.lblSignUp.Location = new System.Drawing.Point(158, 348);
+            this.lblSignUp.Font = new System.Drawing.Font("Verdana", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSignUp.ForeColor = System.Drawing.Color.SlateGray;
+            this.lblSignUp.Location = new System.Drawing.Point(155, 348);
             this.lblSignUp.Name = "lblSignUp";
-            this.lblSignUp.Size = new System.Drawing.Size(47, 13);
+            this.lblSignUp.Size = new System.Drawing.Size(52, 13);
             this.lblSignUp.TabIndex = 4;
             this.lblSignUp.Text = "SignUp";
             this.lblSignUp.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -186,7 +188,7 @@
             // 
             this.lblName.AutoSize = true;
             this.lblName.Font = new System.Drawing.Font("Verdana", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblName.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblName.ForeColor = System.Drawing.Color.SlateGray;
             this.lblName.Location = new System.Drawing.Point(86, 134);
             this.lblName.Name = "lblName";
             this.lblName.Size = new System.Drawing.Size(44, 13);
@@ -207,7 +209,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.SystemColors.Window;
+            this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(350, 430);
             this.Controls.Add(this.lblName);
             this.Controls.Add(this.txtBxName);

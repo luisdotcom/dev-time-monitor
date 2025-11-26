@@ -47,7 +47,9 @@
             // Title
             // 
             this.Title.AutoSize = true;
+            this.Title.BackColor = System.Drawing.Color.Transparent;
             this.Title.Font = new System.Drawing.Font("Verdana", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Title.ForeColor = System.Drawing.Color.SlateGray;
             this.Title.Location = new System.Drawing.Point(106, 85);
             this.Title.Name = "Title";
             this.Title.Size = new System.Drawing.Size(152, 18);
@@ -67,13 +69,13 @@
             // 
             // button1
             // 
-            this.button1.BackColor = System.Drawing.SystemColors.Window;
+            this.button1.BackColor = System.Drawing.Color.Black;
             this.button1.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("button1.BackgroundImage")));
             this.button1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.button1.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.button1.FlatAppearance.BorderColor = System.Drawing.SystemColors.Window;
-            this.button1.FlatAppearance.MouseDownBackColor = System.Drawing.SystemColors.Window;
-            this.button1.FlatAppearance.MouseOverBackColor = System.Drawing.SystemColors.Window;
+            this.button1.FlatAppearance.BorderColor = System.Drawing.Color.Black;
+            this.button1.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Black;
+            this.button1.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Black;
             this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.button1.Location = new System.Drawing.Point(321, 0);
             this.button1.Name = "button1";
@@ -86,7 +88,7 @@
             // 
             this.lblTotal.AutoSize = true;
             this.lblTotal.Font = new System.Drawing.Font("Verdana", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTotal.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.lblTotal.ForeColor = System.Drawing.Color.SlateGray;
             this.lblTotal.Location = new System.Drawing.Point(23, 125);
             this.lblTotal.Name = "lblTotal";
             this.lblTotal.Size = new System.Drawing.Size(121, 13);
@@ -95,7 +97,7 @@
             // 
             // BtnSave
             // 
-            this.BtnSave.BackColor = System.Drawing.Color.DarkSlateBlue;
+            this.BtnSave.BackColor = System.Drawing.Color.SlateBlue;
             this.BtnSave.Cursor = System.Windows.Forms.Cursors.Hand;
             this.BtnSave.FlatAppearance.BorderSize = 0;
             this.BtnSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -120,12 +122,12 @@
             // 
             // BtnCancel
             // 
-            this.BtnCancel.BackColor = System.Drawing.SystemColors.Window;
+            this.BtnCancel.BackColor = System.Drawing.Color.Transparent;
             this.BtnCancel.Cursor = System.Windows.Forms.Cursors.Hand;
             this.BtnCancel.FlatAppearance.BorderColor = System.Drawing.Color.DarkSlateBlue;
             this.BtnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.BtnCancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.BtnCancel.ForeColor = System.Drawing.Color.DarkSlateBlue;
+            this.BtnCancel.ForeColor = System.Drawing.Color.SlateBlue;
             this.BtnCancel.Location = new System.Drawing.Point(26, 313);
             this.BtnCancel.Name = "BtnCancel";
             this.BtnCancel.Size = new System.Drawing.Size(148, 23);
@@ -147,6 +149,7 @@
             // chBxActivateExtension
             // 
             this.chBxActivateExtension.AutoSize = true;
+            this.chBxActivateExtension.ForeColor = System.Drawing.Color.SlateGray;
             this.chBxActivateExtension.Location = new System.Drawing.Point(26, 219);
             this.chBxActivateExtension.Name = "chBxActivateExtension";
             this.chBxActivateExtension.Size = new System.Drawing.Size(134, 17);
@@ -156,7 +159,7 @@
             // 
             // btnTestConnection
             // 
-            this.btnTestConnection.BackColor = System.Drawing.Color.DarkSlateBlue;
+            this.btnTestConnection.BackColor = System.Drawing.Color.SlateBlue;
             this.btnTestConnection.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnTestConnection.FlatAppearance.BorderSize = 0;
             this.btnTestConnection.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -172,7 +175,7 @@
             // 
             // txtBxMessage
             // 
-            this.txtBxMessage.BackColor = System.Drawing.SystemColors.Window;
+            this.txtBxMessage.BackColor = System.Drawing.Color.Black;
             this.txtBxMessage.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.txtBxMessage.ForeColor = System.Drawing.Color.Crimson;
             this.txtBxMessage.Location = new System.Drawing.Point(26, 242);
@@ -186,7 +189,7 @@
             // 
             // btnLogin
             // 
-            this.btnLogin.BackColor = System.Drawing.Color.DarkSlateBlue;
+            this.btnLogin.BackColor = System.Drawing.Color.SlateBlue;
             this.btnLogin.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnLogin.FlatAppearance.BorderSize = 0;
             this.btnLogin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -204,7 +207,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.SystemColors.Window;
+            this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(350, 350);
             this.Controls.Add(this.btnLogin);
             this.Controls.Add(this.txtBxMessage);

@@ -35,6 +35,7 @@ namespace DevTimeMonitor
         private static IVsOutputWindow outputWindow;
         private static TextEditorEvents textEditorEvents;
         private static CommandEvents commandEvents;
+        private static DocumentEvents documentEvents;
         private static IVsTextManager textManager = Package.GetGlobalService(typeof(SVsTextManager)) as IVsTextManager;
         private static IVsTextView textView;
 
@@ -42,6 +43,9 @@ namespace DevTimeMonitor
         private TbUser user;
         private bool logged = false;
         private SettingsPage options;
+        private bool isCommandExecution = false;
+        private HashSet<string> currentlyProcessingDocumentPaths = new HashSet<string>();
+        private readonly object processingLock = new object();
 
         private static HashSet<string> FileTypes;
 
@@ -236,20 +240,19 @@ namespace DevTimeMonitor
                 {
                     if (await Instance.package.GetServiceAsync(typeof(DTE)) is DTE2 dte)
                     {
-                        foreach (Window window in dte.Windows)
+                        Instance.EnsureEventsSubscribed(dte);
+
+                        foreach (Document document in dte.Documents)
                         {
-                            if (window.Kind == "Document" && window.Document != null)
+                            if (document != null && !document.ReadOnly)
                             {
-                                Document document = window.Document;
-                                if (!document.ReadOnly && FileTypes.Contains(document.FullName.Split('.').Last()))
+                                string fileExtension = Path.GetExtension(document.FullName)?.TrimStart('.')?.ToLower();
+                                if (!string.IsNullOrEmpty(fileExtension) && FileTypes.Contains(fileExtension))
                                 {
-                                    Instance.OnWindowCreated(window);
+                                    await Instance.ProcessDocumentAsync(document);
                                 }
                             }
                         }
-
-                        dte.Events.WindowEvents.WindowCreated += Instance.OnWindowCreated;
-                        dte.Events.WindowEvents.WindowClosing += Instance.OnWindowClosing;
                     }
 
                     await PrintMessageAsync("DevTimeMonitor Initialized");
@@ -361,10 +364,11 @@ namespace DevTimeMonitor
                         commandEvents.BeforeExecute -= CommandEvents_BeforeExecute;
                         commandEvents = null;
                     }
-                    if (await Instance.package.GetServiceAsync(typeof(DTE)) is DTE2 dte)
+                    if (documentEvents != null)
                     {
-                        dte.Events.WindowEvents.WindowCreated -= Instance.OnWindowCreated;
-                        dte.Events.WindowEvents.WindowClosing -= Instance.OnWindowClosing;
+                        documentEvents.DocumentOpened -= Instance.DocumentOpenedHandler;
+                        documentEvents.DocumentSaved -= Instance.DocumentSavedHandler;
+                        documentEvents = null;
                     }
 
                     await PrintMessageAsync("DevTimeMonitor Stopped");
@@ -400,209 +404,334 @@ namespace DevTimeMonitor
                 return "error";
             }
         }
-        private async void OnWindowCreated(Window window)
+        private async Task ProcessDocumentAsync(Document document)
         {
-            if (Instance.logged)
+            if (!Instance.logged) return;
+
+            try
             {
-                try
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                if (document == null || document.ReadOnly) return;
+
+                string fileExtension = Path.GetExtension(document.FullName)?.TrimStart('.')?.ToLower();
+                if (string.IsNullOrEmpty(fileExtension) || !FileTypes.Contains(fileExtension)) return;
+
+                string filePath = document.FullName;
+                string fileName = Path.GetFileName(filePath);
+                string projectName = document.ProjectItem?.ContainingProject?.Name ?? "Unknown";
+
+                await FindOrCreateTrackerAsync(projectName, filePath, fileName);
+            }
+            catch (Exception ex)
+            {
+                await PrintMessageAsync($"Error processing document: {ex.Message}");
+            }
+        }
+
+        private async void DocumentOpenedHandler(Document document)
+        {
+            if (!Instance.logged) return;
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(Instance.package.DisposalToken);
+
+            string filePath = document.FullName;
+
+            bool shouldProcess = false;
+            lock (Instance.processingLock)
+            {
+                if (!Instance.currentlyProcessingDocumentPaths.Contains(filePath))
                 {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    if (window.Kind == "Document" && window.Document != null && window.Object != null && window.Document.Windows.Count <= 1)
-                    {
-                        Document document = window.Document;
-                        if (!document.ReadOnly && FileTypes.Contains(document.FullName.Split('.').Last()))
-                        {
-                            if (textEditorEvents == null)
-                            {
-                                textEditorEvents = ((Events2)window.DTE.Events).TextEditorEvents;
-                                textEditorEvents.LineChanged += OnLineChanged;
-                            }
-                            if (commandEvents == null)
-                            {
-                                commandEvents = ((Events2)window.DTE.Events).CommandEvents;
-                                commandEvents.AfterExecute += CommandEvents_AfterExecute;
-                                commandEvents.BeforeExecute += CommandEvents_BeforeExecute;
-                            }
-
-                            string filePath = document.FullName;
-                            string projectName = window.Project.Name;
-                            string fileName = filePath.Split('\\').Last();
-                            string fileContent = await ReadFileContentAsync(filePath);
-                            if (fileContent != "error")
-                            {
-                                await PrintMessageAsync($"File: {fileName} opened.");
-
-                                DateTime currentTime = DateTime.Now.Date;
-                                using (ApplicationDBContext context = new ApplicationDBContext())
-                                {
-                                    TbTracker tracker = context.Trackers.Where(t => t.UserId == user.Id && t.ProjectName == projectName && t.FileName == fileName && t.CreationDate >= currentTime).FirstOrDefault() ?? new TbTracker()
-                                    {
-                                        Id = Instance.trackers.Count,
-                                        Path = filePath,
-                                        ProjectName = projectName,
-                                        FileName = fileName,
-                                        CharactersTracked = 0,
-                                        CharactersByCopilot = 0,
-                                        UserId = user.Id,
-                                        CreationDate = DateTime.Now
-                                    };
-
-                                    if (Instance.trackers.Find(t => t.UserId == user.Id && t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName && t.CreationDate >= currentTime) == null)
-                                    {
-                                        Instance.trackers.Add(tracker);
-                                        context.Trackers.Add(tracker);
-                                    }
-                                    else
-                                    {
-                                        trackers.Remove(trackers.Find(t => t.Id == tracker.Id));
-                                        trackers.Add(tracker);
-                                    }
-                                    await context.SaveChangesAsync();
-                                    await PrintMessageAsync($"Tracking File: {fileName}.");
-                                }
-                            }
-                        }
-                    }
+                    Instance.currentlyProcessingDocumentPaths.Add(filePath);
+                    shouldProcess = true;
                 }
-                catch (IOException ex)
+            }
+
+            if (!shouldProcess) return;
+
+            try
+            {
+                string fileExtension = Path.GetExtension(filePath)?.TrimStart('.')?.ToLower();
+                if (!Instance.trackers.Any(t => t.Path == filePath) &&
+                    !string.IsNullOrEmpty(fileExtension) &&
+                    FileTypes.Contains(fileExtension))
                 {
-                    await PrintMessageAsync(ex.Message);
-                    StopTrackingFiles(null, null);
+                    await Instance.ProcessDocumentAsync(document);
+                }
+            }
+            finally
+            {
+                lock (Instance.processingLock)
+                {
+                    Instance.currentlyProcessingDocumentPaths.Remove(filePath);
                 }
             }
         }
-        private async void OnWindowClosing(Window window)
+        private async void DocumentSavedHandler(Document document)
         {
-            if (Instance.logged)
+            if (!Instance.logged) return;
+
+            try
             {
-                try
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(Instance.package.DisposalToken);
+
+                string filePath = document.FullName;
+                string fileExtension = Path.GetExtension(filePath)?.TrimStart('.')?.ToLower();
+
+                if (string.IsNullOrEmpty(fileExtension) || !FileTypes.Contains(fileExtension)) return;
+
+                TbTracker tracker = Instance.trackers.FirstOrDefault(t => t.Path == filePath);
+
+                if (tracker != null)
                 {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                    if (window.Kind == "Document" && window.Object != null)
+                    string fileContent = await Instance.ReadFileContentAsync(filePath);
+
+                    if (!string.IsNullOrEmpty(fileContent) && fileContent != "error")
                     {
-                        TbTracker tracker = Instance.trackers.Find(t =>
+                        using (ApplicationDBContext context = new ApplicationDBContext())
                         {
-                            ThreadHelper.ThrowIfNotOnUIThread();
-                            return t.FileName == window.Caption;
-                        });
-                        if (tracker != null)
-                        {
-                            string filePath = tracker.Path;
-                            string fileContent = await ReadFileContentAsync(filePath);
-
-                            if (fileContent != "")
+                            DateTime currentTime = DateTime.Now.Date;
+                            if (context.Trackers.Any(t => t.UserId == Instance.user.Id &&
+                                                          t.ProjectName == tracker.ProjectName &&
+                                                          t.FileName == tracker.FileName &&
+                                                          t.CreationDate >= currentTime))
                             {
-                                int characters = fileContent.Length;
-                                DateTime currentTime = DateTime.Now.Date;
-
-                                using (ApplicationDBContext context = new ApplicationDBContext())
-                                {
-                                    if (context.Trackers.Where(t => t.UserId == user.Id && t.ProjectName == tracker.ProjectName && t.FileName == tracker.FileName && t.CreationDate >= currentTime).Any())
-                                    {
-                                        context.Entry(tracker).State = EntityState.Modified;
-                                    }
-                                    else
-                                    {
-                                        context.Trackers.Add(tracker);
-                                    }
-
-                                    await context.SaveChangesAsync();
-                                }
+                                context.Trackers.AddOrUpdate(tracker);
                             }
+                            else
+                            {
+                                context.Trackers.Add(tracker);
+                            }
+                            await context.SaveChangesAsync();
+                        }
 
-                            await PrintMessageAsync($"File: {tracker.FileName} closed.");
+                        await PrintMessageAsync($"Document saved: {tracker.FileName}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                await PrintMessageAsync($"Error saving document: {ex.Message}");
+            }
+        }
+
+        private async Task<bool> FindOrCreateTrackerAsync(string projectName, string filePath, string fileName)
+        {
+            try
+            {
+                string fileContent = await ReadFileContentAsync(filePath);
+                if (fileContent == "error") return false;
+
+                DateTime currentTime = DateTime.Now.Date;
+                TbTracker tracker = trackers.FirstOrDefault(t =>
+                    t.UserId == user.Id &&
+                    t.ProjectName == projectName &&
+                    t.FileName == fileName &&
+                    t.CreationDate >= currentTime);
+
+                if (tracker == null)
+                {
+                    tracker = new TbTracker()
+                    {
+                        UserId = user.Id,
+                        ProjectName = projectName,
+                        FileName = fileName,
+                        Path = filePath,
+                        CharactersTracked = 0,
+                        CharactersByCopilot = 0,
+                        CreationDate = DateTime.Now,
+                    };
+
+                    using (ApplicationDBContext context = new ApplicationDBContext())
+                    {
+                        TbTracker existingTracker = context.Trackers.FirstOrDefault(t =>
+                            t.UserId == user.Id &&
+                            t.ProjectName == projectName &&
+                            t.FileName == fileName &&
+                            t.CreationDate >= currentTime);
+
+                        if (existingTracker == null)
+                        {
+                            context.Trackers.Add(tracker);
+                            await context.SaveChangesAsync();
+                            trackers.Add(tracker);
+                            await PrintMessageAsync($"New tracker created: {fileName}");
+                        }
+                        else
+                        {
+                            trackers.Add(existingTracker);
+                            await PrintMessageAsync($"Existing tracker loaded: {fileName}");
                         }
                     }
                 }
-                catch (IOException ex)
-                {
-                    await PrintMessageAsync(ex.Message);
-                    StopTrackingFiles(null, null);
-                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                await PrintMessageAsync($"Error finding/creating tracker: {ex.Message}");
+                return false;
             }
         }
 
         private static void CommandEvents_BeforeExecute(string guid, int id, object customIn, object customOut, ref bool cancel)
         {
-            if (id == (int)VSConstants.VSStd2KCmdID.TAB)
+            if (!Instance.logged) return;
+
+            try
             {
-                textManager.GetActiveView(1, null, out textView);
-                textView.GetCaretPos(out _beforeRow, out _beforePosition);
+                Instance.isCommandExecution = true;
+
+                if (id == (int)VSConstants.VSStd2KCmdID.TAB)
+                {
+                    textManager?.GetActiveView(1, null, out textView);
+                    textView?.GetCaretPos(out _beforeRow, out _beforePosition);
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintMessageAsync($"Error in BeforeExecute: {ex.Message}").FireAndForget();
             }
         }
         private static async void CommandEvents_AfterExecute(string guid, int id, object customIn, object customOut)
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            if (id == (int)VSConstants.VSStd2KCmdID.TAB)
+            if (!Instance.logged) return;
+
+            try
             {
-                textManager.GetActiveView(1, null, out textView);
-                textView.GetCaretPos(out _afterRow, out _afterPosition);
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                textView.GetTextStream(_beforeRow, _beforePosition, _afterRow, _afterPosition, out string text);
-                int count = text.Count(c => !char.IsWhiteSpace(c));
-                if (count > 0)
+                if (id == (int)VSConstants.VSStd2KCmdID.TAB)
                 {
-                    if (await Instance.package.GetServiceAsync(typeof(DTE)) is DTE2 dte)
-                    {
-                        Window activeWindow = dte.ActiveWindow;
-                        TbTracker tracker = Instance.trackers.Find(t =>
-                        {
-                            ThreadHelper.ThrowIfNotOnUIThread();
-                            return t.FileName == activeWindow.Document.Name && t.Path == activeWindow.Document.FullName;
-                        });
-                        if (tracker != null)
-                        {
-                            tracker.CharactersByCopilot += count;
-                            tracker.CharactersTracked += count;
+                    textManager?.GetActiveView(1, null, out textView);
+                    if (textView == null) return;
 
-                            await PrintMessageAsync($"Accepted completion of length {count}");
+                    textView.GetCaretPos(out _afterRow, out _afterPosition);
+                    textView.GetTextStream(_beforeRow, _beforePosition, _afterRow, _afterPosition, out string text);
+
+                    int count = text?.Count(c => !char.IsWhiteSpace(c)) ?? 0;
+
+                    if (count > 0)
+                    {
+                        if (await Instance.package.GetServiceAsync(typeof(DTE)) is DTE2 dte)
+                        {
+                            Document activeDocument = dte.ActiveDocument;
+                            if (activeDocument != null)
+                            {
+                                string filePath = activeDocument.FullName;
+                                TbTracker tracker = Instance.trackers.FirstOrDefault(t => t.Path == filePath);
+
+                                if (tracker != null)
+                                {
+                                    tracker.CharactersByCopilot += count;
+                                    tracker.CharactersTracked += count;
+                                    await PrintMessageAsync($"Copilot completion: {count} characters");
+                                }
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                await PrintMessageAsync($"Error in AfterExecute: {ex.Message}");
+            }
+            finally
+            {
+                Instance.isCommandExecution = false;
             }
         }
 
         private static async void OnLineChanged(TextPoint startPoint, TextPoint endPoint, int hint)
         {
-            if (Instance.logged)
+            if (!Instance.logged || Instance.isCommandExecution) return;
+
+            try
             {
-                try
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                if (startPoint?.Parent?.Parent?.ActiveWindow?.Document == null) return;
+
+                Document activeDocument = startPoint.Parent.Parent.ActiveWindow.Document;
+                string filePath = activeDocument.FullName;
+                string modifiedText = startPoint.CreateEditPoint().GetText(endPoint);
+
+                if (string.IsNullOrEmpty(modifiedText)) return;
+
+                TbTracker tracker = Instance.trackers.FirstOrDefault(t => t.Path == filePath);
+
+                if (tracker != null)
                 {
-                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                    if (startPoint.Parent != null && startPoint.Parent.Parent != null && startPoint.Parent.Parent.ActiveWindow != null)
+                    if ((modifiedText.Length == 1 || modifiedText == "\r\n" || modifiedText == "\r" || modifiedText == "\n") &&
+                        IsValidCharacter(modifiedText))
                     {
-                        TbTracker tracker = Instance.trackers.Find(t =>
-                        {
-                            ThreadHelper.ThrowIfNotOnUIThread();
-                            return t.FileName == startPoint.Parent.Parent.ActiveWindow.Document.Name && t.Path == startPoint.Parent.Parent.ActiveWindow.Document.FullName;
-                        });
-                        if (tracker != null)
-                        {
-                            string modifiedText = startPoint.CreateEditPoint().GetText(endPoint);
-                            modifiedText = modifiedText.Trim();
-                            if ((modifiedText.Length == 1 || modifiedText == "\r\n" || modifiedText == "\r" || modifiedText == "\n") && IsAValidCharacter(modifiedText))
-                            {
-                                tracker.CharactersTracked++;
-
-                                await PrintMessageAsync($"Character entered by the user in {tracker.FileName}");
-                            }
-                        }
+                        tracker.CharactersTracked++;
                     }
                 }
-                catch (IOException ex)
+            }
+            catch (Exception ex)
+            {
+                await PrintMessageAsync($"Error in OnLineChanged: {ex.Message}");
+            }
+        }
+        private static bool IsValidCharacter(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return false;
+
+            if (text == "\r\n" || text == "\r" || text == "\n") return true;
+
+            return !char.IsWhiteSpace(text[0]);
+        }
+        #endregion
+
+        private void EnsureEventsSubscribed(DTE2 dte)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            if (textEditorEvents == null)
+            {
+                Events2 events = (Events2)dte.Events;
+                textEditorEvents = events.TextEditorEvents;
+                if (textEditorEvents != null)
                 {
-                    await PrintMessageAsync(ex.Message);
-                    StopTrackingFiles(null, null);
+                    textEditorEvents.LineChanged += OnLineChanged;
+                }
+                else
+                {
+                    PrintMessageAsync("Failed to get TextEditorEvents.").FireAndForget();
+                }
+            }
+
+            if (commandEvents == null)
+            {
+                Events2 events = (Events2)dte.Events;
+                commandEvents = events.CommandEvents;
+                if (commandEvents != null)
+                {
+                    commandEvents.BeforeExecute += CommandEvents_BeforeExecute;
+                    commandEvents.AfterExecute += CommandEvents_AfterExecute;
+                }
+                else
+                {
+                    PrintMessageAsync("Failed to get CommandEvents.").FireAndForget();
+                }
+            }
+
+            if (documentEvents == null)
+            {
+                Events2 events = (Events2)dte.Events;
+                documentEvents = events.DocumentEvents;
+                if (documentEvents != null)
+                {
+                    documentEvents.DocumentOpened += DocumentOpenedHandler;
+                    documentEvents.DocumentSaved += DocumentSavedHandler;
+                }
+                else
+                {
+                    PrintMessageAsync("Failed to get DocumentEvents.").FireAndForget();
                 }
             }
         }
-        private static bool IsAValidCharacter(string text)
-        {
-            string characters = "!\"#$%&/()=?¡'¿+*{}[]-_:.;,<> ";
-            return characters.Contains(text) || text.Any(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) || char.IsControl(c) || char.IsSymbol(c));
-        }
-        #endregion
 
         #region REPORTER
         private static void ShowStatistics(object sender, EventArgs e)
